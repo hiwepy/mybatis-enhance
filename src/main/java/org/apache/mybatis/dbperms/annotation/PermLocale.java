@@ -22,6 +22,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.apache.mybatis.dbi18n.annotation.LocaleEnum;
+
 @Documented
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)

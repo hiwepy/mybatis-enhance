@@ -511,6 +511,11 @@
 			<artifactId>mybatis-biz</artifactId>
 			<version>1.0.0-SNAPSHOT</version>
 		</dependency>
+		<dependency>
+			<groupId>com.github.vindell</groupId>
+			<artifactId>mybatis-dbi18n</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
+		</dependency>
 
 	</dependencies>
 
