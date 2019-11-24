@@ -16,6 +16,7 @@
 package org.apache.mybatis.dbperms.interceptor;
 
 import java.lang.reflect.Method;
+import java.util.Set;
 import java.util.function.Function;
 
 import org.apache.ibatis.executor.statement.StatementHandler;
@@ -28,6 +29,7 @@ import org.apache.ibatis.reflection.MetaObject;
 import org.apache.ibatis.utils.MetaObjectUtils;
 import org.apache.mybatis.dbperms.annotation.RequiresPermission;
 import org.apache.mybatis.dbperms.annotation.RequiresPermissions;
+import org.apache.mybatis.dbperms.function.InterceptFunctionFactory;
 import org.mybatis.spring.cache.BeanMethodDefinitionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,9 +42,6 @@ public class DbpermsStatementInterceptor extends AbstractDbpermsInterceptor {
 	
 	@Override
 	public Object doStatementIntercept(Invocation invocation, StatementHandler statementHandler,MetaStatementHandler metaStatementHandler) throws Throwable {
-		
-		Function< MetaStatementHandler, R>
-		
 		
 		//检查是否需要进行拦截处理
 		if (isRequireIntercept(invocation, statementHandler, metaStatementHandler)) {
@@ -62,20 +61,14 @@ public class DbpermsStatementInterceptor extends AbstractDbpermsInterceptor {
 				String originalSQL = (String) metaBoundSql.getValue("sql");
 				//循环标记对象
 				for (RequiresPermission permission : permissionArr) {
+					
+					Function<MetaStatementHandler, Set<String>> function = InterceptFunctionFactory.getFunction(permission.target());
+					Set<String> permSet = function.apply(metaStatementHandler);
 					if(permission != null && !StringUtils.isEmpty(permission.foreign()) ){
 						String target = permission.target();
 						String primary = permission.primary();
 						String foreign = permission.foreign();
-						for (PermLocale i18nLocale : locales) {
-							//国际化语言匹配
-							if(locale.toString().equals(i18nLocale.locale().getLocale().toString())){
-								//根据参数决定替换值
-								String newColumn = StringUtils.isEmpty(i18nLocale.alias()) ? i18nLocale.column() : i18nLocale.column() + " as " + i18nLocale.alias();
-								//替换特殊标记的语句，如：@name =>> name_yw as name
-								originalSQL.replaceAll("@" + permission.column(), newColumn );
-								break;
-							}
-						}
+						originalSQL.replaceAll(permission.target(), "" );
 					}
 				}
 				// 将处理后的物理分页sql重新写入作为执行SQL
