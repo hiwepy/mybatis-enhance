@@ -16,7 +16,7 @@
 package org.apache.mybatis.dbperms.interceptor;
 
 import java.lang.reflect.Method;
-import java.util.Locale;
+import java.util.function.Function;
 
 import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.mapping.BoundSql;
@@ -26,21 +26,23 @@ import org.apache.ibatis.plugin.Plugin;
 import org.apache.ibatis.plugin.meta.MetaStatementHandler;
 import org.apache.ibatis.reflection.MetaObject;
 import org.apache.ibatis.utils.MetaObjectUtils;
-import org.apache.mybatis.dbperms.annotation.PermColumn;
-import org.apache.mybatis.dbperms.annotation.PermLocale;
-import org.apache.mybatis.dbperms.annotation.PermSwitch;
+import org.apache.mybatis.dbperms.annotation.RequiresPermission;
+import org.apache.mybatis.dbperms.annotation.RequiresPermissions;
 import org.mybatis.spring.cache.BeanMethodDefinitionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.StringUtils;
 
-public abstract class AbstractDataI18nColumnInterceptor extends AbstractDataI18nInterceptor {
+public class DbpermsStatementInterceptor extends AbstractDbpermsInterceptor {
 
-	protected static Logger LOG = LoggerFactory.getLogger(AbstractDataI18nColumnInterceptor.class);
+	protected static Logger LOG = LoggerFactory.getLogger(DbpermsStatementInterceptor.class);
 	
 	@Override
-	public Object doStatementIntercept(Invocation invocation,StatementHandler statementHandler,MetaStatementHandler metaStatementHandler) throws Throwable {
+	public Object doStatementIntercept(Invocation invocation, StatementHandler statementHandler,MetaStatementHandler metaStatementHandler) throws Throwable {
+		
+		Function< MetaStatementHandler, R>
+		
 		
 		//检查是否需要进行拦截处理
 		if (isRequireIntercept(invocation, statementHandler, metaStatementHandler)) {
@@ -50,28 +52,27 @@ public abstract class AbstractDataI18nColumnInterceptor extends AbstractDataI18n
 			// 获取对应的BoundSql，这个BoundSql其实跟我们利用StatementHandler获取到的BoundSql是同一个对象。
 			BoundSql boundSql = metaStatementHandler.getBoundSql();
 			MetaObject metaBoundSql = MetaObjectUtils.forObject(boundSql);
-			// 获取当前上下文中的Locale对象
-			Locale locale = this.getLocale();
 			//提取被国际化注解标记的方法
 			Method method = BeanMethodDefinitionFactory.getMethodDefinition(mappedStatement.getId());
 			//获取替换模式下的国际化注解标记
-			PermSwitch i18nSwitch = AnnotationUtils.findAnnotation(method, PermSwitch.class);
+			RequiresPermissions permissions = AnnotationUtils.findAnnotation(method, RequiresPermissions.class);
 			//解析注解映射关系
-			PermColumn[] i18nColumns  = i18nSwitch.value();
-			if(i18nColumns != null && i18nColumns.length > 0){
+			RequiresPermission[] permissionArr  = permissions.value();
+			if(permissionArr != null && permissionArr.length > 0){
 				String originalSQL = (String) metaBoundSql.getValue("sql");
 				//循环标记对象
-				for (PermColumn i18nColumn : i18nColumns) {
-					if(i18nColumn != null && !StringUtils.isEmpty(i18nColumn.column()) ){
-						//获取国际化语言映射列
-						PermLocale[] locales = i18nColumn.i18n();
+				for (RequiresPermission permission : permissionArr) {
+					if(permission != null && !StringUtils.isEmpty(permission.foreign()) ){
+						String target = permission.target();
+						String primary = permission.primary();
+						String foreign = permission.foreign();
 						for (PermLocale i18nLocale : locales) {
 							//国际化语言匹配
 							if(locale.toString().equals(i18nLocale.locale().getLocale().toString())){
 								//根据参数决定替换值
 								String newColumn = StringUtils.isEmpty(i18nLocale.alias()) ? i18nLocale.column() : i18nLocale.column() + " as " + i18nLocale.alias();
 								//替换特殊标记的语句，如：@name =>> name_yw as name
-								originalSQL.replaceAll("@" + i18nColumn.column(), newColumn );
+								originalSQL.replaceAll("@" + permission.column(), newColumn );
 								break;
 							}
 						}
@@ -80,7 +81,7 @@ public abstract class AbstractDataI18nColumnInterceptor extends AbstractDataI18n
 				// 将处理后的物理分页sql重新写入作为执行SQL
 				metaBoundSql.setValue("sql", originalSQL);
 				if (LOG.isDebugEnabled()) {
-					LOG.debug(" I18n SQL : "+ statementHandler.getBoundSql().getSql());
+					LOG.debug(" Perms SQL : "+ statementHandler.getBoundSql().getSql());
 				}
 			}
 		}

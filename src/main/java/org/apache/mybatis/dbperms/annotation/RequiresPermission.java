@@ -22,18 +22,21 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.apache.mybatis.dbi18n.annotation.LocaleEnum;
-
+/**
+ * 该注解用于方法，字段；指明字段
+ */
 @Documented
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE})
-public @interface PermLocale {
+@Target({ElementType.METHOD,ElementType.FIELD})
+public @interface RequiresPermission {
 
-	public abstract LocaleEnum locale() default LocaleEnum.zh_CN;
+	public abstract String target();
 	
-	public abstract String column();
+	public abstract String primary();
+
+	public abstract Relational relation();
 	
-	public abstract String alias() default "";
+	public abstract String foreign();
 	
 }

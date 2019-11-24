@@ -16,12 +16,9 @@
 package org.apache.mybatis.dbperms.interceptor;
 
 import java.lang.reflect.Method;
-import java.util.List;
-import java.util.Locale;
 import java.util.Properties;
 
 import org.apache.ibatis.cache.CacheKey;
-import org.apache.ibatis.executor.resultset.ResultSetHandler;
 import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
@@ -29,24 +26,17 @@ import org.apache.ibatis.mapping.SqlCommandType;
 import org.apache.ibatis.plugin.AbstractInterceptorAdapter;
 import org.apache.ibatis.plugin.Invocation;
 import org.apache.ibatis.plugin.Plugin;
-import org.apache.ibatis.plugin.meta.MetaResultSetHandler;
 import org.apache.ibatis.plugin.meta.MetaStatementHandler;
-import org.apache.mybatis.dbperms.annotation.PermMapper;
-import org.apache.mybatis.dbperms.annotation.PermSwitch;
-import org.apache.mybatis.dbperms.i18n.handler.DataI18nHandler;
-import org.apache.mybatis.dbperms.i18n.handler.def.DefaultDataI18nHandler;
-import org.mybatis.spring.cache.BeanMethodDefinitionFactory;
+import org.apache.mybatis.dbperms.annotation.RequiresPermissions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.DigestUtils;
 import org.springframework.util.StringUtils;
  
-public abstract class AbstractDataI18nInterceptor extends AbstractInterceptorAdapter {
+public abstract class AbstractDbpermsInterceptor extends AbstractInterceptorAdapter {
 
-	protected static Logger LOG = LoggerFactory.getLogger(AbstractDataI18nInterceptor.class);
-	protected DataI18nHandler i18nHandler;
+	protected static Logger LOG = LoggerFactory.getLogger(AbstractDbpermsInterceptor.class);
 	
 	@Override
 	protected boolean isRequireIntercept(Invocation invocation, StatementHandler statementHandler, MetaStatementHandler metaStatementHandler) {
@@ -54,24 +44,12 @@ public abstract class AbstractDataI18nInterceptor extends AbstractInterceptorAda
 		MappedStatement mappedStatement = metaStatementHandler.getMappedStatement();
 		// 获取对应的BoundSql，这个BoundSql其实跟我们利用StatementHandler获取到的BoundSql是同一个对象。
 		BoundSql boundSql = metaStatementHandler.getBoundSql();
-		Object paramObject = boundSql.getParameterObject();
+		// Object paramObject = boundSql.getParameterObject();
 		//提取被国际化注解标记的方法
-		Method method = BeanMethodDefinitionFactory.getMethodDefinition(mappedStatement.getId(), paramObject != null ? new Class<?>[] {paramObject.getClass()} : null);
+		Method method = metaStatementHandler.getMethod(); 
+		//BeanMethodDefinitionFactory.getMethodDefinition(mappedStatement.getId(), paramObject != null ? new Class<?>[] {paramObject.getClass()} : null);
 		return  SqlCommandType.SELECT.equals(mappedStatement.getSqlCommandType()) && method != null &&
-				AnnotationUtils.findAnnotation(method, PermSwitch.class) != null;
-	}
-	
-	@Override
-	protected boolean isRequireIntercept(Invocation invocation,ResultSetHandler resultSetHandler,MetaResultSetHandler metaResultSetHandler) {
-		// 通过反射获取到当前MappedStatement
-		MappedStatement mappedStatement = metaResultSetHandler.getMappedStatement();
-		// 获取对应的BoundSql，这个BoundSql其实跟我们利用StatementHandler获取到的BoundSql是同一个对象。
-		BoundSql boundSql = metaResultSetHandler.getBoundSql();
-		Object paramObject = boundSql.getParameterObject();
-		//提取被国际化注解标记的方法
-		Method method = BeanMethodDefinitionFactory.getMethodDefinition(mappedStatement.getId(), paramObject != null ? new Class<?>[] {paramObject.getClass()} : null);
-		return  SqlCommandType.SELECT.equals(mappedStatement.getSqlCommandType()) && method != null &&
-				AnnotationUtils.findAnnotation(method, PermMapper.class) != null;
+				AnnotationUtils.findAnnotation(method, RequiresPermissions.class) != null;
 	}
 	
 	protected boolean isIntercepted(CacheKey cacheKey) {
@@ -84,30 +62,12 @@ public abstract class AbstractDataI18nInterceptor extends AbstractInterceptorAda
 		return false;
 	}
 	
-	public abstract Locale getLocale();
-
-	protected Object wrapI18nParam(Locale locale, Invocation invocation, MetaResultSetHandler metaResultSetHandler, Object result,Object orginParam) throws Exception {
-		if(this.i18nHandler == null){
-			this.i18nHandler = new DefaultDataI18nHandler();
-		}
-		return this.i18nHandler.wrap(locale, invocation, metaResultSetHandler, result, orginParam);
-	}
-	
-	protected Object doI18nMapper(Locale locale, Invocation invocation,MetaResultSetHandler metaResultSetHandler, Object orginList, List<Object> i18nDataList) throws Exception {
-		if(this.i18nHandler == null){
-			this.i18nHandler = new DefaultDataI18nHandler();
-		}
-		return this.i18nHandler.handle(locale, invocation, metaResultSetHandler, orginList, i18nDataList);
-	}
-	 
-	
 	@Override
 	public void setInterceptProperties(Properties properties) {
 		String i18nHandlerClazz = properties.getProperty("i18nHandler");
 		if(!StringUtils.isEmpty(i18nHandlerClazz)){
 			try {
 				Class<?> clazz = Class.forName(i18nHandlerClazz);
-				this.i18nHandler = BeanUtils.instantiateClass(clazz, DataI18nHandler.class);
 			} catch (ClassNotFoundException e) {
 				LOG.warn("Class :" + i18nHandlerClazz + " is not found !");
 			} catch (Exception e) {

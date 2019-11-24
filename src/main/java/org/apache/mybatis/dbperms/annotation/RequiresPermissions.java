@@ -9,10 +9,10 @@ import java.lang.annotation.Target;
 
 @Documented
 @Inherited
+@Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.METHOD, ElementType.FIELD})
-public @interface PermPrimary {
-
-	public abstract String value() default "";
+public @interface RequiresPermissions {
+	
+	public abstract RequiresPermission[] value() default {};
 	
 }

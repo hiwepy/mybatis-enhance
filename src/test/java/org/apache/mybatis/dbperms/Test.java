@@ -15,6 +15,30 @@
  */
 package org.apache.mybatis.dbperms;
 
-public class Test {
+import org.apache.mybatis.dbperms.annotation.Relational;
+import org.apache.mybatis.dbperms.annotation.RequiresPermission;
+import org.apache.mybatis.dbperms.annotation.RequiresPermissions;
 
+public class Test {
+	
+	@RequiresPermissions(
+		value = {
+			@RequiresPermission(target = "XXX_XXB", primary = "", relation = Relational.EQ, foreign = ""),
+			@RequiresPermission(target = "XXX_XXB", primary = "", relation = Relational.EQ, foreign = "")
+		}
+	)
+	public void test1() {
+		
+	}
+	
+	@RequiresPermissions(
+		value = {
+			@RequiresPermission(target = "XXX_XXB", primary = "", relation = Relational.EQ, foreign = ""),
+			@RequiresPermission(target = "XXX_XXB", primary = "", relation = Relational.EQ, foreign = "")
+		}
+	)
+	public void test2() {
+		
+	}
+	
 }

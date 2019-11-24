@@ -15,6 +15,7 @@
  */
 package org.apache.mybatis.dbperms.interceptor;
 
+import java.sql.Connection;
 import java.util.List;
 import java.util.Locale;
 
@@ -31,45 +32,41 @@ import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.session.RowBounds;
-import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.transaction.Transaction;
 import org.apache.ibatis.transaction.TransactionFactory;
 import org.apache.ibatis.utils.MybatisUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class AbstractDataI18nExternalInterceptor extends AbstractDataI18nInterceptor {
+public class DbpermsInternalInterceptor extends AbstractDbpermsInterceptor {
 
-	protected static Logger LOG = LoggerFactory.getLogger(AbstractDataI18nExternalInterceptor.class);
-	
-	public abstract SqlSession getSqlSession();
+	protected static Logger LOG = LoggerFactory.getLogger(DbpermsInternalInterceptor.class);
 	
 	@Override
 	public Object doResultSetIntercept(Invocation invocation,ResultSetHandler resultSetHandler,MetaResultSetHandler metaResultSetHandler) throws Throwable{
 		// 获取处理结果
 		Object result = invocation.proceed();
 		//检查是否需要进行拦截处理
-		if(result != null &&  isRequireIntercept(invocation, resultSetHandler, metaResultSetHandler)){
-			
+		if(result != null && isRequireIntercept(invocation, resultSetHandler, metaResultSetHandler)){
+
 			// 获取当前上下文中的Locale对象
 			Locale locale = this.getLocale();
 			// 利用反射获取到FastResultSetHandler的mappedStatement属性，从而获取到MappedStatement；
 			MappedStatement mappedStatement = metaResultSetHandler.getMappedStatement();
-			// 从国际化SqlSessionFactory中获取Session对象
-			SqlSession i18nSession = this.getSqlSession();
-			// 获取国际化SqlSessionFactory对应的Mybatis Configuration对象
-			Configuration i18nConfiguration = i18nSession.getConfiguration();
+			// 获取当前MappedStatement的Mybatis Configuration对象
+			Configuration configuration = metaResultSetHandler.getConfiguration();
+			//connection = configuration.getEnvironment().getDataSource().getConnection();
 			// 获取当前MappedStatement对应的国际化MappedStatement对象
 			String newID = mappedStatement.getId() + "_" + locale.toString();
 			LOG.debug(" Get i18n data query statement by id [" +  newID + "]" );
 			// 获取与当前查询ID相同的Statement对象
-			MappedStatement i18nMS = i18nConfiguration.getMappedStatement(newID);
+			MappedStatement i18nMS = configuration.getMappedStatement(newID);
 			//如果未定义当前查询方法对应的国际化查询配置
 			if(i18nMS == null){
 				// 返回原始结果  
 				return result;
 			}
-
+		 	
 			// 利用反射获取到FastResultSetHandler的ParameterHandler属性，从而获取到ParameterObject；
 			ParameterHandler parameterHandler = metaResultSetHandler.getParameterHandler();
 			//定义BoundSql对象
@@ -77,24 +74,26 @@ public abstract class AbstractDataI18nExternalInterceptor extends AbstractDataI1
 		 	//国际化查询参数
 		 	Object i18nObject = super.wrapI18nParam(locale, invocation, metaResultSetHandler, result, parameterHandler.getParameterObject());
 		 	//已经处理过国际化的数据跳过
-		 	if( isIntercepted(MybatisUtils.createCacheKey(i18nMS, i18nObject, RowBounds.DEFAULT, boundSql , locale)) ){
+		 	if( isIntercepted(MybatisUtils.createCacheKey(i18nMS, i18nObject, RowBounds.DEFAULT, boundSql, locale)) ){
 		 		// 返回结果  
 		 		return result;
 		 	}
 		 	
-		 	try {
-		 		
+			try {
+				
+				//获取当前数据库连接
+				Connection connection = MybatisUtils.getDataSourceFromEnvironment(configuration).getConnection();
 				//获取当前事物工厂对象
-				TransactionFactory transactionFactory = MybatisUtils.getTransactionFactoryFromEnvironment(i18nConfiguration);
+				TransactionFactory transactionFactory = MybatisUtils.getTransactionFactoryFromEnvironment(configuration);
 				//创建事物对象
-				Transaction tx = transactionFactory.newTransaction(i18nSession.getConnection());
+				Transaction tx = transactionFactory.newTransaction(connection);
 				//创建执行器对象
-				Executor executor = i18nConfiguration.newExecutor(tx, ExecutorType.SIMPLE);
+				Executor executor = configuration.newExecutor(tx, ExecutorType.SIMPLE);
 				//创建ResultHandler对象
-				ResultHandler<Object> resultHandler = MybatisUtils.newResultHandler(i18nConfiguration);
+				ResultHandler<Object> resultHandler = MybatisUtils.newResultHandler(configuration);
 				
 				//查询当前ID对应的国际化数据结果
-				List<Object> i18nDataList = executor.query(i18nMS, i18nObject , RowBounds.DEFAULT , resultHandler);
+				List<Object> i18nDataList = executor.query(i18nMS, i18nObject , RowBounds.DEFAULT, resultHandler);
 				if(i18nDataList == null){
 					return result;
 				}
@@ -106,10 +105,10 @@ public abstract class AbstractDataI18nExternalInterceptor extends AbstractDataI1
 		    	throw ExceptionFactory.wrapException("Error querying database.  Cause: " + e, e);
 		    } finally {
 		    	ErrorContext.instance().reset();
-		    	i18nSession.close();
 		    }
-			
+
 		}
+
 		// 返回结果
 		return result;
 	}
