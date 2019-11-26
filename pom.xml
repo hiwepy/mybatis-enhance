@@ -373,10 +373,12 @@
 		<commons-collections4.version>4.1</commons-collections4.version>
 		<commons-lang3.version>3.7</commons-lang3.version>
 		<contiperf.version>2.3.4</contiperf.version>
-		<java.version>1.7</java.version>
+		<java.version>1.8</java.version>
+		<jsqlparser.version>3.1</jsqlparser.version>
 		<junit.version>4.12</junit.version>
 		<reflections.version>0.9.11</reflections.version>
 		<slf4j.version>1.7.25</slf4j.version>
+		<lombok.version>1.18.10</lombok.version>
 		<spring.version>4.3.17.RELEASE</spring.version><!-- 4.3.x（JDK 1.7 ）、4.1.x（JDK 1.6）、4.0.x（JDK 1.6） -->
 		<maven.version>3.0</maven.version>
 		<maven-clean-plugin.version>3.0.0</maven-clean-plugin.version>
@@ -400,7 +402,18 @@
 	<dependencyManagement>
 		<dependencies>
 
-
+			<!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
+			<dependency>
+			    <groupId>org.projectlombok</groupId>
+			    <artifactId>lombok</artifactId>
+			    <version>${lombok.version}</version>
+			</dependency>
+			<!-- https://mvnrepository.com/artifact/com.github.jsqlparser/jsqlparser -->
+			<dependency>
+			    <groupId>com.github.jsqlparser</groupId>
+			    <artifactId>jsqlparser</artifactId>
+			    <version>${jsqlparser.version}</version>
+			</dependency>
 			<!-- https://mvnrepository.com/artifact/junit/junit -->
 			<dependency>
 			    <groupId>junit</groupId>
@@ -471,7 +484,11 @@
 		    <artifactId>contiperf</artifactId>
 		    <scope>test</scope>
 		</dependency>
-		
+		<dependency>
+		    <groupId>org.projectlombok</groupId>
+		    <artifactId>lombok</artifactId>
+		    <scope>provided</scope>
+		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
@@ -492,7 +509,12 @@
 		    <groupId>org.mybatis</groupId>
 		    <artifactId>mybatis-spring</artifactId>
 		</dependency>
-		 
+		 <!-- https://mvnrepository.com/artifact/com.github.jsqlparser/jsqlparser -->
+		<dependency>
+		    <groupId>com.github.jsqlparser</groupId>
+		    <artifactId>jsqlparser</artifactId>
+		</dependency>
+		
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context</artifactId>
@@ -509,11 +531,6 @@
 		<dependency>
 			<groupId>com.github.vindell</groupId>
 			<artifactId>mybatis-biz</artifactId>
-			<version>1.0.0-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>com.github.vindell</groupId>
-			<artifactId>mybatis-dbi18n</artifactId>
 			<version>1.0.0-SNAPSHOT</version>
 		</dependency>
 

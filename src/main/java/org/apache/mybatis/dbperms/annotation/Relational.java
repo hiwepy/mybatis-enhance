@@ -17,27 +17,8 @@ package org.apache.mybatis.dbperms.annotation;
 
 public enum Relational {
 
-	GTE(">="),
-    LTE("<="),
-    EQ("=="),
-
-    /**
-     * Type safe equals
-     */
-    TSEQ("==="),
-    NE("!="),
-
-    /**
-     * Type safe not equals
-     */
-    TSNE("!=="),
-    LT("<"),
-    GT(">"),
-    IN("IN"),
-    CONTAINS("CONTAINS"),
-    ALL("ALL"),
-    SIZE("SIZE"),
-    EXISTS("EXISTS");
+	AND("and"),
+    OR("or");
 	
 	private final String operator;
 
@@ -51,7 +32,7 @@ public enum Relational {
                 return relational;
             }
         }
-        throw new RuntimeException("Filter operator " + operator + " is not supported!");
+        throw new RuntimeException("Operator " + operator + " is not supported!");
     }
 
     @Override

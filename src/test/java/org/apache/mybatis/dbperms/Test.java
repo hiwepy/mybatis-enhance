@@ -17,24 +17,33 @@ package org.apache.mybatis.dbperms;
 
 import org.apache.mybatis.dbperms.annotation.Relational;
 import org.apache.mybatis.dbperms.annotation.RequiresPermission;
+import org.apache.mybatis.dbperms.annotation.RequiresPermissionItem;
 import org.apache.mybatis.dbperms.annotation.RequiresPermissions;
 
 public class Test {
 	
-	@RequiresPermissions(
-		value = {
-			@RequiresPermission(target = "XXX_XXB", primary = "", relation = Relational.EQ, foreign = ""),
-			@RequiresPermission(target = "XXX_XXB", primary = "", relation = Relational.EQ, foreign = "")
-		}
-	)
+	/**
+	 * 自动注入方式
+	 */
+	@RequiresPermissions
 	public void test1() {
 		
 	}
 	
+	/**
+	 * 手动定义方式
+	 */
 	@RequiresPermissions(
+		autowire = false,
 		value = {
-			@RequiresPermission(target = "XXX_XXB", primary = "", relation = Relational.EQ, foreign = ""),
-			@RequiresPermission(target = "XXX_XXB", primary = "", relation = Relational.EQ, foreign = "")
+			@RequiresPermission(table = "XXX_XXB", value = {
+				@RequiresPermissionItem(column = "xxxx", perms = "id=xx,xx=sss"),
+				@RequiresPermissionItem(column = "xxxx", perms = "id=xx,xx=sss")
+			}, relation =  Relational.AND),
+			@RequiresPermission(table = "YYY_XXB", value = {
+				@RequiresPermissionItem(column = "xxxx", perms = "id=xx,xx=sss"),
+				@RequiresPermissionItem(column = "xxxx", perms = "id=xx,xx=sss")
+			}, relation =  Relational.OR)
 		}
 	)
 	public void test2() {

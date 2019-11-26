@@ -29,19 +29,15 @@ import java.lang.annotation.Target;
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD})
-public @interface RequiresPermission {
+public @interface RequiresPermissionItem {
 
 	/**
-	 *受限表名称（实体表名称）
+	 * 受限表字段名称（实体表字段列名称）
 	 */
-	public abstract String table();
+	public abstract String column();
 	/**
-	 * 数据权限项数组
+	 * 受限表字段限制条件
 	 */
-	public abstract RequiresPermissionItem[] value();
-	/**
-	 * 数据权限项关系 and/or
-	 */
-	public abstract Relational relation();
+	public abstract String perms();
 	
 }

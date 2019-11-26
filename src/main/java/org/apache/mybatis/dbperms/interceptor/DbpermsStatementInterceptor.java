@@ -16,8 +16,6 @@
 package org.apache.mybatis.dbperms.interceptor;
 
 import java.lang.reflect.Method;
-import java.util.Set;
-import java.util.function.Function;
 
 import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.mapping.BoundSql;
@@ -29,16 +27,21 @@ import org.apache.ibatis.reflection.MetaObject;
 import org.apache.ibatis.utils.MetaObjectUtils;
 import org.apache.mybatis.dbperms.annotation.RequiresPermission;
 import org.apache.mybatis.dbperms.annotation.RequiresPermissions;
-import org.apache.mybatis.dbperms.function.InterceptFunctionFactory;
+import org.apache.mybatis.dbperms.parser.TablePermissionParser;
 import org.mybatis.spring.cache.BeanMethodDefinitionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.util.StringUtils;
 
 public class DbpermsStatementInterceptor extends AbstractDbpermsInterceptor {
 
 	protected static Logger LOG = LoggerFactory.getLogger(DbpermsStatementInterceptor.class);
+	protected TablePermissionParser tablePermissionParser;
+	
+	public DbpermsStatementInterceptor(TablePermissionParser tablePermissionParser) {
+		this.tablePermissionParser = tablePermissionParser;
+	}
+	
 	
 	@Override
 	public Object doStatementIntercept(Invocation invocation, StatementHandler statementHandler,MetaStatementHandler metaStatementHandler) throws Throwable {
@@ -55,28 +58,32 @@ public class DbpermsStatementInterceptor extends AbstractDbpermsInterceptor {
 			Method method = BeanMethodDefinitionFactory.getMethodDefinition(mappedStatement.getId());
 			//获取替换模式下的国际化注解标记
 			RequiresPermissions permissions = AnnotationUtils.findAnnotation(method, RequiresPermissions.class);
-			//解析注解映射关系
-			RequiresPermission[] permissionArr  = permissions.value();
-			if(permissionArr != null && permissionArr.length > 0){
+			// 需要权限控制
+			if(permissions != null) {
+				// 原始SQL
 				String originalSQL = (String) metaBoundSql.getValue("sql");
-				//循环标记对象
-				for (RequiresPermission permission : permissionArr) {
-					
-					Function<MetaStatementHandler, Set<String>> function = InterceptFunctionFactory.getFunction(permission.target());
-					Set<String> permSet = function.apply(metaStatementHandler);
-					if(permission != null && !StringUtils.isEmpty(permission.foreign()) ){
-						String target = permission.target();
-						String primary = permission.primary();
-						String foreign = permission.foreign();
-						originalSQL.replaceAll(permission.target(), "" );
-					}
+				// 框架自动进行数据权限注入
+				if(permissions.autowire()) {
+					originalSQL = tablePermissionParser.parser(metaStatementHandler, originalSQL);
 				}
-				// 将处理后的物理分页sql重新写入作为执行SQL
-				metaBoundSql.setValue("sql", originalSQL);
-				if (LOG.isDebugEnabled()) {
-					LOG.debug(" Perms SQL : "+ statementHandler.getBoundSql().getSql());
+				else {
+					// 解析注解映射关系
+					RequiresPermission[] permissionArr  = permissions.value();
+					if(permissionArr != null && permissionArr.length > 0){
+						//循环标记对象
+						for (RequiresPermission permission : permissionArr) {
+							
+						}
+						// 将处理后的物理分页sql重新写入作为执行SQL
+						metaBoundSql.setValue("sql", originalSQL);
+						if (LOG.isDebugEnabled()) {
+							LOG.debug(" Perms SQL : "+ statementHandler.getBoundSql().getSql());
+						}
+					}
+					
 				}
 			}
+			
 		}
 		// 将执行权交给下一个拦截器  
 		return invocation.proceed();

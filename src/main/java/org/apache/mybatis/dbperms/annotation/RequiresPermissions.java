@@ -13,6 +13,8 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RequiresPermissions {
 	
+	public abstract boolean autowire() default true;
+	
 	public abstract RequiresPermission[] value() default {};
 	
 }
