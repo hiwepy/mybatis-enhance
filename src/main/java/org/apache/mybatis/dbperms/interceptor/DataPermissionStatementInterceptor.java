@@ -16,7 +16,6 @@
 package org.apache.mybatis.dbperms.interceptor;
 
 import java.lang.reflect.Method;
-import java.util.Properties;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.ibatis.executor.statement.StatementHandler;
