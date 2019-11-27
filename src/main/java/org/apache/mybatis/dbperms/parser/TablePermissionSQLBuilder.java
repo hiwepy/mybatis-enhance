@@ -13,31 +13,18 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.mybatis.dbperms.annotation;
+package org.apache.mybatis.dbperms.parser;
 
-public enum Relational {
+import org.apache.commons.lang3.builder.Builder;
 
-	AND(" AND "),
-    OR(" OR ");
+public class TablePermissionSQLBuilder implements Builder<String> {
+
 	
-	private final String operator;
-
-	Relational(String operator) {
-        this.operator = operator;
-    }
-
-    public static Relational fromString(String operator){
-        for (Relational relational : Relational.values()) {
-            if(relational.operator.equals(operator.toUpperCase()) ){
-                return relational;
-            }
-        }
-        throw new RuntimeException("Operator " + operator + " is not supported!");
-    }
-
-    @Override
-    public String toString() {
-        return operator;
-    }
+	
+	
+	@Override
+	public String build() {
+		return null;
+	}
 	
 }

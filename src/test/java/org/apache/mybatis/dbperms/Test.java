@@ -15,9 +15,15 @@
  */
 package org.apache.mybatis.dbperms;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.apache.mybatis.dbperms.annotation.Condition;
+import org.apache.mybatis.dbperms.annotation.ForeignCondition;
 import org.apache.mybatis.dbperms.annotation.Relational;
 import org.apache.mybatis.dbperms.annotation.RequiresPermission;
-import org.apache.mybatis.dbperms.annotation.RequiresPermissionItem;
+import org.apache.mybatis.dbperms.annotation.RequiresPermissionColumn;
+import org.apache.mybatis.dbperms.annotation.RequiresPermissionForeign;
 import org.apache.mybatis.dbperms.annotation.RequiresPermissions;
 
 public class Test {
@@ -37,16 +43,58 @@ public class Test {
 		autowire = false,
 		value = {
 			@RequiresPermission(table = "XXX_XXB", value = {
-				@RequiresPermissionItem(column = "xxxx", perms = "id=xx,xx=sss"),
-				@RequiresPermissionItem(column = "xxxx", perms = "id=xx,xx=sss")
+				@RequiresPermissionColumn(column = "R_ID", condition = Condition.IN, perms = "1001,1002"),
+				@RequiresPermissionColumn(column = "AGE", condition = Condition.BITAND_EQ, perms = "15")
 			}, relation =  Relational.AND),
 			@RequiresPermission(table = "YYY_XXB", value = {
-				@RequiresPermissionItem(column = "xxxx", perms = "id=xx,xx=sss"),
-				@RequiresPermissionItem(column = "xxxx", perms = "id=xx,xx=sss")
+				@RequiresPermissionColumn(column = "R_ID", condition = Condition.IN, perms = "1001,1002"),
+				@RequiresPermissionColumn(column = "AGE", condition = Condition.BITAND_EQ, perms = "15")
 			}, relation =  Relational.OR)
 		}
 	)
 	public void test2() {
+		
+	}
+	
+	/**
+	 * 手动定义方式
+	 */
+	@RequiresPermission(table = "XXX_XXB", value = {
+		@RequiresPermissionColumn(column = "R_ID", condition = Condition.IN, perms = "1001,1002"),
+		@RequiresPermissionColumn(column = "AGE", condition = Condition.BITAND_EQ, perms = "15"),
+		@RequiresPermissionColumn(column = "P_ID", condition = Condition.EXISTS, perms = "15", 
+			foreign = @RequiresPermissionForeign( table = "xxxxx", column = "xxx", condition = ForeignCondition.EQ)
+		)
+	}, relation =  Relational.AND)
+	public void test3() {
+		
+	}
+	
+	public static void main(String[] args) {
+		
+		String originalSQL = "select t.xh,t.xsjbxxb_id,t.xqdmb_id,t.ssxy_id,t.zyfxdmb_id,t.zyh_id,t.xzbdmb_id,t.nj_id from xs_xsjbxxb t，xs_xsjbxxb 2";
+		Pattern pattern_find = Pattern.compile("(xs_xsjbxxb)+");
+    	// 匹配所有匹配的表名
+		Matcher matcher = pattern_find.matcher(originalSQL);
+		// 查找匹配的片段
+		while (matcher.find()) {
+			// 获取匹配的内容
+			String full_segment = matcher.group(0);
+			// 取得{}内容开始结束位置
+			int begain = originalSQL.indexOf(full_segment);
+			int end = begain + full_segment.length();
+			
+			originalSQL = originalSQL.substring(0, begain) + "xxxxxxxxxxxxxxxxxxx" + originalSQL.substring(end);
+			
+			
+			System.out.println(full_segment);
+			System.out.println(begain);
+			System.out.println(end);
+			
+		}
+		
+		System.out.println(originalSQL);
+		
 		
 	}
 	

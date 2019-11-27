@@ -15,7 +15,7 @@
  */
 package org.apache.mybatis.dbperms.annotation;
 
-public enum Condition {
+public enum ForeignCondition {
 	
 	/**
      * 大于
@@ -58,9 +58,6 @@ public enum Condition {
      */
     LIKE_RIGHT(" %s.%s LIKE CONCAT(%s,'%%') "),
 	
-    EXISTS(" EXISTS ( %s ) "),
-    NOT_EXISTS(" NOT EXISTS ( %s ) "),
-    
     BITAND_GT(" bitand(%s, to_number(%s.%s)) > 0"),
     BITAND_GTE(" bitand(%s, to_number(%s.%s)) >= 0"),
     BITAND_LT(" bitand(%s, to_number(%s.%s)) < 0"),
@@ -75,12 +72,12 @@ public enum Condition {
 	
 	private final String operator;
 
-	Condition(String operator) {
+	ForeignCondition(String operator) {
         this.operator = operator;
     }
 
-    public static Condition fromString(String operator){
-        for (Condition relational : Condition.values()) {
+    public static ForeignCondition fromString(String operator){
+        for (ForeignCondition relational : ForeignCondition.values()) {
             if(relational.operator.equals(operator.toUpperCase()) ){
                 return relational;
             }

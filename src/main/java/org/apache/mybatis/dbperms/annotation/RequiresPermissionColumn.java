@@ -28,20 +28,24 @@ import java.lang.annotation.Target;
 @Documented
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.METHOD})
-public @interface RequiresPermission {
+@Target({ElementType.FIELD})
+public @interface RequiresPermissionColumn {
 
 	/**
-	 *受限表名称（实体表名称）
+	 * 受限表字段名称（实体表字段列名称）
 	 */
-	public abstract String table();
+	public abstract String column();
 	/**
-	 * 数据权限项数组
+	 * 受限表字段与限制条件之间的关联条件
 	 */
-	public abstract RequiresPermissionColumn[] value();
+	public abstract Condition condition();
 	/**
-	 * 数据权限项关系 and/or
+	 *外关联表名称（实体表名称），在 condition 为 EXISTS、NOT_EXISTS 时有意义
 	 */
-	public abstract Relational relation();
+	public abstract RequiresPermissionForeign foreign() default @RequiresPermissionForeign(condition = ForeignCondition.EQ);
+	/**
+	 * 受限表字段限制条件：
+	 */
+	public abstract String perms();
 	
 }

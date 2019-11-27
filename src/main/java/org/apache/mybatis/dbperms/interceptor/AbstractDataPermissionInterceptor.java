@@ -20,36 +20,35 @@ import java.util.Properties;
 
 import org.apache.ibatis.cache.CacheKey;
 import org.apache.ibatis.executor.statement.StatementHandler;
-import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.mapping.SqlCommandType;
 import org.apache.ibatis.plugin.AbstractInterceptorAdapter;
 import org.apache.ibatis.plugin.Invocation;
 import org.apache.ibatis.plugin.Plugin;
 import org.apache.ibatis.plugin.meta.MetaStatementHandler;
+import org.apache.mybatis.dbperms.annotation.RequiresPermission;
 import org.apache.mybatis.dbperms.annotation.RequiresPermissions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.DigestUtils;
-import org.springframework.util.StringUtils;
  
-public abstract class AbstractDbpermsInterceptor extends AbstractInterceptorAdapter {
+public abstract class AbstractDataPermissionInterceptor extends AbstractInterceptorAdapter {
 
-	protected static Logger LOG = LoggerFactory.getLogger(AbstractDbpermsInterceptor.class);
+	protected static Logger LOG = LoggerFactory.getLogger(AbstractDataPermissionInterceptor.class);
 	
 	@Override
 	protected boolean isRequireIntercept(Invocation invocation, StatementHandler statementHandler, MetaStatementHandler metaStatementHandler) {
 		// 通过反射获取到当前MappedStatement
 		MappedStatement mappedStatement = metaStatementHandler.getMappedStatement();
 		// 获取对应的BoundSql，这个BoundSql其实跟我们利用StatementHandler获取到的BoundSql是同一个对象。
-		BoundSql boundSql = metaStatementHandler.getBoundSql();
+		// BoundSql boundSql = metaStatementHandler.getBoundSql();
 		// Object paramObject = boundSql.getParameterObject();
 		//提取被国际化注解标记的方法
 		Method method = metaStatementHandler.getMethod(); 
 		//BeanMethodDefinitionFactory.getMethodDefinition(mappedStatement.getId(), paramObject != null ? new Class<?>[] {paramObject.getClass()} : null);
 		return  SqlCommandType.SELECT.equals(mappedStatement.getSqlCommandType()) && method != null &&
-				AnnotationUtils.findAnnotation(method, RequiresPermissions.class) != null;
+				(AnnotationUtils.findAnnotation(method, RequiresPermissions.class) != null || AnnotationUtils.findAnnotation(method, RequiresPermission.class) != null);
 	}
 	
 	protected boolean isIntercepted(CacheKey cacheKey) {
@@ -63,21 +62,6 @@ public abstract class AbstractDbpermsInterceptor extends AbstractInterceptorAdap
 	}
 	
 	@Override
-	public void setInterceptProperties(Properties properties) {
-		String i18nHandlerClazz = properties.getProperty("i18nHandler");
-		if(!StringUtils.isEmpty(i18nHandlerClazz)){
-			try {
-				Class<?> clazz = Class.forName(i18nHandlerClazz);
-			} catch (ClassNotFoundException e) {
-				LOG.warn("Class :" + i18nHandlerClazz + " is not found !");
-			} catch (Exception e) {
-				LOG.warn(e.getMessage());
-			}
-		}
-	}
-	
-	
-	@Override
 	public void doDestroyIntercept(Invocation invocation) throws Throwable {
 		extraContext.clear();
 	}
@@ -86,6 +70,10 @@ public abstract class AbstractDbpermsInterceptor extends AbstractInterceptorAdap
 	public Object plugin(Object target) {
 		return Plugin.wrap(target, this);  
 	}
-	
+
+	@Override
+	public void setInterceptProperties(Properties properties) {
+		
+	}
 	
 }

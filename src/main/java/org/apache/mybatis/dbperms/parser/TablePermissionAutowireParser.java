@@ -33,12 +33,15 @@ import net.sf.jsqlparser.util.TablesNamesFinder;
 
 @Data
 @Accessors(chain = true)
-public class TablePermissionParser {
+public class TablePermissionAutowireParser implements ITablePermissionParser {
 	
 	private TablesNamesFinder tablesNamesFinder = new TablesNamesFinder(); 
-	private Map<String, ITablePermissionHandler> tablePermissionHandlerMap;
+	private Map<String, ITablePermissionAutowireHandler> tablePermissionHandlerMap;
 
     public String parser(MetaStatementHandler metaObject, String sql) {
+    	if (!this.doFilter(metaObject, sql)) {
+    		 return sql;
+		}
         //Assert.isFalse(CollectionUtils.isEmpty(tablePermissionHandlerMap), "tablePermissionHandlerMap is empty.");
         Collection<String> tables = new TableNameParser(sql).tables();
         // 尝试另外一种方式
@@ -57,25 +60,19 @@ public class TablePermissionParser {
 			} catch (JSQLParserException e) {
 			}
         }
-        
         String parsedSql = sql;
         if (CollectionUtils.isNotEmpty(tables)) {
-            boolean sqlParsed = false;
             for (final String table : tables) {
-            	ITablePermissionHandler tableNameHandler = tablePermissionHandlerMap.get(table);
+            	ITablePermissionAutowireHandler tableNameHandler = tablePermissionHandlerMap.get(table);
                 if (null != tableNameHandler) {
-                    parsedSql = tableNameHandler.process(metaObject, parsedSql, table);
-                    sqlParsed = true;
+                	parsedSql = tableNameHandler.process(metaObject, parsedSql, table);
                 }
-            }
-            if (sqlParsed) {
-                return parsedSql;
             }
 		}
         return parsedSql;
     }
     
-    public ITablePermissionHandler getTablePermissionHandler(String tableName) {
+    public ITablePermissionAutowireHandler getTablePermissionHandler(String tableName) {
     	return tablePermissionHandlerMap.get(tableName);
 	}
 	

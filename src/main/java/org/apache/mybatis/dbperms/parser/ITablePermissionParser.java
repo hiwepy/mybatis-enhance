@@ -13,31 +13,24 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.mybatis.dbperms.annotation;
+package org.apache.mybatis.dbperms.parser;
 
-public enum Relational {
+import org.apache.ibatis.plugin.meta.MetaStatementHandler;
 
-	AND(" AND "),
-    OR(" OR ");
-	
-	private final String operator;
+public interface ITablePermissionParser {
 
-	Relational(String operator) {
-        this.operator = operator;
+	 /**
+     * <p>
+     * 是否执行 SQL 解析 parser 方法
+     * </p>
+     *
+     * @param metaObject 元对象
+     * @param sql        SQL 语句
+     * @return SQL 信息
+     */
+    default boolean doFilter(final MetaStatementHandler metaObject, final String sql) {
+        // 默认 true 执行 SQL 解析, 可重写实现控制逻辑
+        return true;
     }
-
-    public static Relational fromString(String operator){
-        for (Relational relational : Relational.values()) {
-            if(relational.operator.equals(operator.toUpperCase()) ){
-                return relational;
-            }
-        }
-        throw new RuntimeException("Operator " + operator + " is not supported!");
-    }
-
-    @Override
-    public String toString() {
-        return operator;
-    }
-	
+    
 }
