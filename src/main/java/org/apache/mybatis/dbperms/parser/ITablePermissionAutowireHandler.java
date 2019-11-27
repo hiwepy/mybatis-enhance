@@ -21,7 +21,11 @@ import java.util.regex.Pattern;
 import org.apache.ibatis.plugin.meta.MetaStatementHandler;
 
 public interface ITablePermissionAutowireHandler {
-
+	
+	default boolean match(MetaStatementHandler metaObject, String tableName) {
+		return true;
+	}
+	
 	/**
      * 表名 SQL 处理
      *

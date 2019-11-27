@@ -17,7 +17,6 @@ package org.apache.mybatis.dbperms.parser;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.ibatis.plugin.meta.MetaStatementHandler;
 import org.apache.ibatis.utils.CollectionUtils;
@@ -36,13 +35,12 @@ import net.sf.jsqlparser.util.TablesNamesFinder;
 public class TablePermissionAutowireParser implements ITablePermissionParser {
 	
 	private TablesNamesFinder tablesNamesFinder = new TablesNamesFinder(); 
-	private Map<String, ITablePermissionAutowireHandler> tablePermissionHandlerMap;
+	private ITablePermissionAutowireHandler tablePermissionHandler;
 
-    public String parser(MetaStatementHandler metaObject, String sql) {
-    	if (!this.doFilter(metaObject, sql)) {
+    public String parser(MetaStatementHandler metaHandler, String sql) {
+    	if (!this.doFilter(metaHandler, sql)) {
     		 return sql;
 		}
-        //Assert.isFalse(CollectionUtils.isEmpty(tablePermissionHandlerMap), "tablePermissionHandlerMap is empty.");
         Collection<String> tables = new TableNameParser(sql).tables();
         // 尝试另外一种方式
         if (CollectionUtils.isEmpty(tables)) {
@@ -63,17 +61,12 @@ public class TablePermissionAutowireParser implements ITablePermissionParser {
         String parsedSql = sql;
         if (CollectionUtils.isNotEmpty(tables)) {
             for (final String table : tables) {
-            	ITablePermissionAutowireHandler tableNameHandler = tablePermissionHandlerMap.get(table);
-                if (null != tableNameHandler) {
-                	parsedSql = tableNameHandler.process(metaObject, parsedSql, table);
+                if (null != tablePermissionHandler && tablePermissionHandler.match(metaHandler, table)) {
+                	parsedSql = tablePermissionHandler.process(metaHandler, parsedSql, table);
                 }
             }
 		}
         return parsedSql;
     }
-    
-    public ITablePermissionAutowireHandler getTablePermissionHandler(String tableName) {
-    	return tablePermissionHandlerMap.get(tableName);
-	}
 	
 }

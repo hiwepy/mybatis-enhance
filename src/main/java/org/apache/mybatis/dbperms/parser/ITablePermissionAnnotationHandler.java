@@ -23,6 +23,10 @@ import org.apache.mybatis.dbperms.annotation.RequiresPermission;
 
 public interface ITablePermissionAnnotationHandler {
 
+	default boolean match(MetaStatementHandler metaHandler, String tableName) {
+		return true;
+	}
+	
 	/**
      * 表名 SQL 处理
      *

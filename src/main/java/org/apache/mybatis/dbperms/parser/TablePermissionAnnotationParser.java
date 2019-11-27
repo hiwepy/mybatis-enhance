@@ -17,17 +17,16 @@ package org.apache.mybatis.dbperms.parser;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.plugin.meta.MetaStatementHandler;
-import org.apache.ibatis.utils.Assert;
 import org.apache.ibatis.utils.CollectionUtils;
-import org.apache.ibatis.utils.MapUtils;
 import org.apache.mybatis.dbperms.annotation.RequiresPermission;
 import org.apache.mybatis.dbperms.annotation.RequiresPermissions;
 
+import lombok.Data;
+import lombok.experimental.Accessors;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.statement.Statement;
@@ -35,16 +34,17 @@ import net.sf.jsqlparser.statement.Statements;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.util.TablesNamesFinder;
 
+@Data
+@Accessors(chain = true)
 public class TablePermissionAnnotationParser implements ITablePermissionParser {
 
 	private TablesNamesFinder tablesNamesFinder = new TablesNamesFinder(); 
-	private Map<String, ITablePermissionAnnotationHandler> tablePermissionHandlerMap;
+	private ITablePermissionAnnotationHandler tablePermissionHandler = new DefaultTablePermissionAnnotationHandler();
 	
     public String parser(MetaStatementHandler metaHandler, String sql, RequiresPermissions permissions) {
     	if (!this.doFilter(metaHandler, sql)) {
    		 return sql;
 		}
-    	Assert.isTrue(MapUtils.isNotEmpty(tablePermissionHandlerMap), "tablePermissionHandlerMap is empty.");
     	Collection<String> tables = new TableNameParser(sql).tables();
         // 尝试另外一种方式
         if (CollectionUtils.isEmpty(tables)) {
@@ -68,9 +68,8 @@ public class TablePermissionAnnotationParser implements ITablePermissionParser {
 			for (RequiresPermission permission : permissionArr) {
 				String tableName = StringUtils.lowerCase(permission.table());
 				if(tables.stream().anyMatch(table -> StringUtils.equalsAnyIgnoreCase(table, tableName))) {
-					ITablePermissionAnnotationHandler tableNameHandler = tablePermissionHandlerMap.get(tableName);
-	                if (null != tableNameHandler) {
-	                	parsedSql = tableNameHandler.process(metaHandler, parsedSql, permission);
+					if(null != tablePermissionHandler && tablePermissionHandler.match(metaHandler, tableName)) {
+	                	parsedSql = tablePermissionHandler.process(metaHandler, parsedSql, permission);
 	                }
 				}
 			}
@@ -79,7 +78,6 @@ public class TablePermissionAnnotationParser implements ITablePermissionParser {
     }
     
     public String parser(MetaStatementHandler metaHandler, String sql, RequiresPermission permission) {
-    	Assert.isTrue(MapUtils.isNotEmpty(tablePermissionHandlerMap), "tablePermissionHandlerMap is empty.");
         Collection<String> tables = new TableNameParser(sql).tables();
         // 尝试另外一种方式
         if (CollectionUtils.isEmpty(tables)) {
@@ -101,17 +99,12 @@ public class TablePermissionAnnotationParser implements ITablePermissionParser {
         if (CollectionUtils.isNotEmpty(tables) && null != permission) {
         	String tableName = StringUtils.lowerCase(permission.table());
 			if(tables.stream().anyMatch(table -> StringUtils.equalsAnyIgnoreCase(table, tableName))) {
-				ITablePermissionAnnotationHandler tableNameHandler = tablePermissionHandlerMap.get(tableName);
-                if (null != tableNameHandler) {
-                	parsedSql = tableNameHandler.process(metaHandler, parsedSql, permission);
-                }
+				if(null != tablePermissionHandler && tablePermissionHandler.match(metaHandler, tableName)) {
+					parsedSql = tablePermissionHandler.process(metaHandler, parsedSql, permission);
+				}
 			}
 		}
         return parsedSql;
     }
-    
-    public ITablePermissionAnnotationHandler getTablePermissionHandler(String tableName) {
-    	return tablePermissionHandlerMap.get(tableName);
-	}
     
 }
