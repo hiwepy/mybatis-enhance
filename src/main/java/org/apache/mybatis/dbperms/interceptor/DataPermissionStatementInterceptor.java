@@ -36,11 +36,12 @@ import org.springframework.core.annotation.AnnotationUtils;
 public class DataPermissionStatementInterceptor extends AbstractDataPermissionInterceptor {
 
 	protected static Logger LOG = LoggerFactory.getLogger(DataPermissionStatementInterceptor.class);
-	protected TablePermissionAutowireParser autowirePermissionParser;
-	protected TablePermissionAnnotationParser annotationPermissionParser;
+	protected final TablePermissionAutowireParser autowirePermissionParser;
+	protected final TablePermissionAnnotationParser annotationPermissionParser;
 	
-	public DataPermissionStatementInterceptor(TablePermissionAutowireParser autowirePermissionParser) {
+	public DataPermissionStatementInterceptor(TablePermissionAutowireParser autowirePermissionParser, TablePermissionAnnotationParser annotationPermissionParser) {
 		this.autowirePermissionParser = autowirePermissionParser;
+		this.annotationPermissionParser = annotationPermissionParser;
 	}
 	
 	@Override
