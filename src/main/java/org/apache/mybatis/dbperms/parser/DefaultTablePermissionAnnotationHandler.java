@@ -117,6 +117,8 @@ public class DefaultTablePermissionAnnotationHandler implements ITablePermission
 			}
 			builder.append(" WHERE ").append(StringUtils.join(parts, permission.relation().toString() ));
 			builder.append(" )");
+			
+			return builder.toString();
 		}
 		
 		return permission.table();
