@@ -66,12 +66,7 @@ public class DefaultTablePermissionAutowireHandler implements ITablePermissionAu
 					case IN:
 					case LIKE:
 					case LIKE_LEFT:
-					case LIKE_RIGHT:
-					case INSTR_GT:
-					case INSTR_GTE:
-					case INSTR_LT:
-					case INSTR_LTE:
-					case INSTR_EQ:{
+					case LIKE_RIGHT:{
 						parts.add(String.format(column.getCondition().toString(), alias, column.getColumn(), column.getPerms()));
 					};break;
 					case BITAND_GT:
@@ -101,12 +96,7 @@ public class DefaultTablePermissionAutowireHandler implements ITablePermissionAu
 							case IN:
 							case LIKE:
 							case LIKE_LEFT:
-							case LIKE_RIGHT:
-							case INSTR_GT:
-							case INSTR_GTE:
-							case INSTR_LT:
-							case INSTR_LTE:
-							case INSTR_EQ:{
+							case LIKE_RIGHT:{
 								partSQL.append(String.format(foreign.getCondition().toString(), "fkt", foreign.getColumn(), column.getPerms()));
 							};break;
 							case BITAND_GT:

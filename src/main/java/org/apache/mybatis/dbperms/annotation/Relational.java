@@ -34,10 +34,5 @@ public enum Relational {
         }
         throw new RuntimeException("Operator " + operator + " is not supported!");
     }
-
-    @Override
-    public String toString() {
-        return operator;
-    }
 	
 }

@@ -57,12 +57,7 @@ public class DefaultTablePermissionAnnotationHandler implements ITablePermission
 					case IN:
 					case LIKE:
 					case LIKE_LEFT:
-					case LIKE_RIGHT:
-					case INSTR_GT:
-					case INSTR_GTE:
-					case INSTR_LT:
-					case INSTR_LTE:
-					case INSTR_EQ:{
+					case LIKE_RIGHT:{
 						parts.add(String.format(column.condition().toString(), alias, column.column(), column.perms()));
 					};break;
 					case BITAND_GT:
@@ -92,12 +87,7 @@ public class DefaultTablePermissionAnnotationHandler implements ITablePermission
 							case IN:
 							case LIKE:
 							case LIKE_LEFT:
-							case LIKE_RIGHT:
-							case INSTR_GT:
-							case INSTR_GTE:
-							case INSTR_LT:
-							case INSTR_LTE:
-							case INSTR_EQ:{
+							case LIKE_RIGHT:{
 								partSQL.append(String.format(foreign.condition().toString(), "fkt", foreign.column(), column.perms()));
 							};break;
 							case BITAND_GT:
