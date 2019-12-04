@@ -15,24 +15,52 @@
  */
 package org.apache.mybatis.dbperms.annotation;
 
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
+
 public enum Relational {
 
-	AND(" AND "),
-    OR(" OR ");
+	AND(" AND ", "且"),
+    OR(" OR ","或");
 	
 	private final String operator;
-
-	Relational(String operator) {
+	private final String placeholder;
+	
+	Relational(String operator, String placeholder) {
         this.operator = operator;
+        this.placeholder = placeholder;
     }
 
     public static Relational fromString(String operator){
         for (Relational relational : Relational.values()) {
-            if(relational.operator.equals(operator.toUpperCase()) ){
+            if(StringUtils.equalsIgnoreCase(StringUtils.trim(relational.operator), StringUtils.trim(operator.toUpperCase())) ){
                 return relational;
             }
         }
         throw new RuntimeException("Operator " + operator + " is not supported!");
     }
+    
+    public Map<String, String> toMap() {
+		Map<String, String> driverMap = new HashMap<String, String>();
+		driverMap.put("key", this.name());
+		driverMap.put("value", this.getPlaceholder());
+		return driverMap;
+	}
+	
+	public static List<Map<String, String>> toList() {
+		List<Map<String, String>> mapList = new LinkedList<Map<String, String>>();
+		for (Relational relational : Relational.values()) {
+			mapList.add(relational.toMap());
+		}
+		return mapList;
+	}
+	
+	public String getPlaceholder() {
+		return placeholder;
+	}
 	
 }
