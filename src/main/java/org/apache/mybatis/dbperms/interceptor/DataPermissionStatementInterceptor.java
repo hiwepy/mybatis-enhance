@@ -76,17 +76,42 @@ public class DataPermissionStatementInterceptor extends AbstractDataPermissionIn
 				if (LOG.isDebugEnabled()) {
 					LOG.debug(" Permissioned SQL : "+ statementHandler.getBoundSql().getSql());
 				}
-			} else {
-				// 获取 @RequiresPermission 注解标记
-				RequiresPermission permission = AnnotationUtils.findAnnotation(method, RequiresPermission.class);
-				if (permission != null) {
-					originalSQL = annotationPermissionParser.parser(metaStatementHandler, originalSQL, permission);
-					// 将处理后的物理分页sql重新写入作为执行SQL
-					metaBoundSql.setValue("sql", originalSQL);
-					if (LOG.isDebugEnabled()) {
-						LOG.debug(" Permissioned SQL : "+ statementHandler.getBoundSql().getSql());
-					}
+				// 将执行权交给下一个拦截器  
+				return invocation.proceed();
+			} 
+			
+			// 获取 @RequiresPermission 注解标记
+			RequiresPermission permission = AnnotationUtils.findAnnotation(method, RequiresPermission.class);
+			if (permission != null) {
+				originalSQL = annotationPermissionParser.parser(metaStatementHandler, originalSQL, permission);
+				// 将处理后的物理分页sql重新写入作为执行SQL
+				metaBoundSql.setValue("sql", originalSQL);
+				if (LOG.isDebugEnabled()) {
+					LOG.debug(" Permissioned SQL : "+ statementHandler.getBoundSql().getSql());
 				}
+				// 将执行权交给下一个拦截器  
+				return invocation.proceed();
+			}
+			
+			// 获取接口类型
+			Class<?> mapperInterface = metaStatementHandler.getMapperProxy().getMapperInterface();
+			permissions = AnnotationUtils.findAnnotation(mapperInterface, RequiresPermissions.class);
+			// 需要权限控制
+			if(permissions != null) {
+				// 框架自动进行数据权限注入
+				if(permissions.autowire()) {
+					originalSQL = autowirePermissionParser.parser(metaStatementHandler, originalSQL);
+				}
+				else if(ArrayUtils.isNotEmpty(permissions.value())){
+					originalSQL = annotationPermissionParser.parser(metaStatementHandler, originalSQL, permissions);
+				}
+				// 将处理后的物理分页sql重新写入作为执行SQL
+				metaBoundSql.setValue("sql", originalSQL);
+				if (LOG.isDebugEnabled()) {
+					LOG.debug(" Permissioned SQL : "+ statementHandler.getBoundSql().getSql());
+				}
+				// 将执行权交给下一个拦截器  
+				return invocation.proceed();
 			}
 		}
 		// 将执行权交给下一个拦截器  

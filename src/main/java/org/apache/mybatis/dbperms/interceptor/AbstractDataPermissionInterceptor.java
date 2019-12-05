@@ -46,9 +46,13 @@ public abstract class AbstractDataPermissionInterceptor extends AbstractIntercep
 		// Object paramObject = boundSql.getParameterObject();
 		//提取被国际化注解标记的方法
 		Method method = metaStatementHandler.getMethod(); 
+		// 获取接口类型
+		Class<?> mapperInterface = metaStatementHandler.getMapperProxy().getMapperInterface();
+		
 		//BeanMethodDefinitionFactory.getMethodDefinition(mappedStatement.getId(), paramObject != null ? new Class<?>[] {paramObject.getClass()} : null);
 		return  SqlCommandType.SELECT.equals(mappedStatement.getSqlCommandType()) && method != null &&
-				(AnnotationUtils.findAnnotation(method, RequiresPermissions.class) != null || AnnotationUtils.findAnnotation(method, RequiresPermission.class) != null);
+				(AnnotationUtils.findAnnotation(mapperInterface, RequiresPermissions.class) != null || 
+				 AnnotationUtils.findAnnotation(method, RequiresPermissions.class) != null || AnnotationUtils.findAnnotation(method, RequiresPermission.class) != null);
 	}
 	
 	protected boolean isIntercepted(CacheKey cacheKey) {
