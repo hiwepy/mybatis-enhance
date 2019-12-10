@@ -17,15 +17,15 @@ package org.apache.mybatis.dbperms.parser;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.plugin.meta.MetaStatementHandler;
 import org.apache.mybatis.dbperms.annotation.RequiresPermission;
 import org.apache.mybatis.dbperms.annotation.RequiresPermissionColumn;
 import org.apache.mybatis.dbperms.annotation.RequiresPermissionForeign;
+import org.apache.mybatis.dbperms.utils.StringUtils;
 
 /**
  * 根据注解的权限信息组装权限语句
@@ -38,7 +38,8 @@ public class DefaultTablePermissionAnnotationHandler implements ITablePermission
 		RequiresPermissionColumn[] columns = permission.value();
 		if(ArrayUtils.isNotEmpty(columns)) {
 			
-			String alias = RandomStringUtils.random(3);
+			int tindex = 0;
+			String alias = "t" + tindex;
 			
 			StringBuilder builder = new StringBuilder();
 			builder.append("(");
@@ -47,6 +48,10 @@ public class DefaultTablePermissionAnnotationHandler implements ITablePermission
 			// 构建数据限制条件SQL
 			List<String> parts = new ArrayList<String>();
 			for (RequiresPermissionColumn column : columns) {
+				
+				if(!StringUtils.isNotBlank(column.perms())) {
+					continue;
+				}
 				switch (column.condition()) {
 					case GT:
 					case GTE:
@@ -54,19 +59,32 @@ public class DefaultTablePermissionAnnotationHandler implements ITablePermission
 					case LTE:
 					case EQ:
 					case NE:
-					case IN:
 					case LIKE:
 					case LIKE_LEFT:
 					case LIKE_RIGHT:{
-						parts.add(String.format(column.condition().toString(), alias, column.column(), column.perms()));
+						StringBuilder partSQL = new StringBuilder();
+						partSQL.append(" ( ");
+						partSQL.append(Stream.of(StringUtils.split(column.perms(),","))
+								.map(perm -> String.format(column.condition().getOperator(), alias, column.column(), StringUtils.quote(perm))).collect(Collectors.joining(" OR ")));
+						partSQL.append(" ) ");
+						parts.add(partSQL.toString());
+					};break;
+					case IN:{
+						String inPart = Stream.of(StringUtils.split(column.perms(),","))
+							.map(perm -> StringUtils.quote(perm)).collect(Collectors.joining(","));
+						parts.add(String.format(column.condition().getOperator(), alias, column.column(), inPart));
 					};break;
 					case BITAND_GT:
 					case BITAND_GTE:
 					case BITAND_LT:
 					case BITAND_LTE:
 					case BITAND_EQ:{
-						int sum = Stream.of(StringUtils.split(column.perms(),"")).mapToInt(perm->Integer.parseInt(perm)).sum();
-						parts.add(String.format(column.condition().toString(), sum, alias, column.column()));
+						StringBuilder partSQL = new StringBuilder();
+						partSQL.append(" ( ");
+						partSQL.append(Stream.of(StringUtils.split(column.perms(),","))
+								.map(perm -> String.format(column.condition().getOperator(), Integer.parseInt(perm), alias, column.column())).collect(Collectors.joining(" OR ")));
+						partSQL.append(" ) ");
+						parts.add(partSQL.toString());
 					};break;
 					case EXISTS:
 					case NOT_EXISTS:{
@@ -84,26 +102,36 @@ public class DefaultTablePermissionAnnotationHandler implements ITablePermission
 							case LTE:
 							case EQ:
 							case NE:
-							case IN:
 							case LIKE:
 							case LIKE_LEFT:
 							case LIKE_RIGHT:{
-								partSQL.append(String.format(foreign.condition().toString(), "fkt", foreign.column(), column.perms()));
+								partSQL.append(" AND ( ");
+								partSQL.append(Stream.of(StringUtils.split(column.perms(),","))
+										.map(perm -> String.format(foreign.condition().getOperator(), "fkt", foreign.column(), StringUtils.quote(perm))).collect(Collectors.joining(" OR ")));
+								partSQL.append(" ) ");
+							};break;
+							case IN:{
+								String inPart = Stream.of(StringUtils.split(column.perms(),","))
+									.map(perm -> StringUtils.quote(perm)).collect(Collectors.joining(","));
+								partSQL.append(String.format(foreign.condition().getOperator(), "fkt", foreign.column(), inPart));
 							};break;
 							case BITAND_GT:
 							case BITAND_GTE:
 							case BITAND_LT:
 							case BITAND_LTE:
 							case BITAND_EQ:{
-								int sum = Stream.of(StringUtils.split(column.perms(),"")).mapToInt(perm->Integer.parseInt(perm)).sum();
-								partSQL.append(String.format(foreign.condition().toString(), sum, "fkt", foreign.column()));
+								partSQL.append(" AND ( ");
+								partSQL.append(Stream.of(StringUtils.split(column.perms(),","))
+										.map(perm -> String.format(foreign.condition().getOperator(), Integer.parseInt(perm), "fkt", foreign.column())).collect(Collectors.joining(" OR ")));
+								partSQL.append(" ) ");
 							};break;
 							default:{};break;
 						}
-						parts.add(String.format(column.condition().toString(), partSQL.toString()));
+						parts.add(String.format(column.condition().getOperator(), partSQL.toString()));
 					};break;
 					default:{};break;
 				}
+				tindex ++;
 			}
 			builder.append(" WHERE ").append(StringUtils.join(parts, permission.relation().toString() ));
 			builder.append(" )");
