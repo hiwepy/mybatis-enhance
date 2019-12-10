@@ -37,10 +37,32 @@ public class TablePermissionAutowireParser implements ITablePermissionParser {
 	private TablesNamesFinder tablesNamesFinder = new TablesNamesFinder(); 
 	private ITablePermissionAutowireHandler tablePermissionHandler;
 
+	private volatile boolean initialized = false;
+
+    /**
+     * Initialize the object.
+     */
+    public void init() {
+        if (!this.initialized) {
+            synchronized (this) {
+                if (!this.initialized) {
+                    internalInit();
+                    this.initialized = true;
+                }
+            }
+        }
+    }
+
+    /**
+     * Internal initialization of the object.
+     */
+    protected void internalInit() {};
+    
     public String parser(MetaStatementHandler metaHandler, String sql) {
     	if (!this.doFilter(metaHandler, sql)) {
     		 return sql;
 		}
+    	this.init();
         Collection<String> tables = new TableNameParser(sql).tables();
         // 尝试另外一种方式
         if (CollectionUtils.isEmpty(tables)) {
