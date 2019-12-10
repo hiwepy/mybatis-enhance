@@ -71,11 +71,16 @@ public class DefaultTablePermissionAutowireHandler implements ITablePermissionAu
 					case LIKE:
 					case LIKE_LEFT:
 					case LIKE_RIGHT:{
-						parts.add(String.format(column.getCondition().getOperator(), alias, column.getColumn(), StringUtils.quote(column.getPerms())));
+						StringBuilder partSQL = new StringBuilder();
+						partSQL.append(" ( ");
+						partSQL.append(Stream.of(StringUtils.split(column.getPerms(),","))
+								.map(perm -> String.format(column.getCondition().getOperator(), alias, column.getColumn(), StringUtils.quote(perm))).collect(Collectors.joining(" OR ")));
+						partSQL.append(" ) ");
+						parts.add(partSQL.toString());
 					};break;
 					case IN:{
 						String inPart = Stream.of(StringUtils.split(column.getPerms(),","))
-							.map(perms -> StringUtils.quote(perms)).collect(Collectors.joining(","));
+							.map(perm -> StringUtils.quote(perm)).collect(Collectors.joining(","));
 						parts.add(String.format(column.getCondition().getOperator(), alias, column.getColumn(), inPart));
 					};break;
 					case BITAND_GT:
@@ -83,8 +88,12 @@ public class DefaultTablePermissionAutowireHandler implements ITablePermissionAu
 					case BITAND_LT:
 					case BITAND_LTE:
 					case BITAND_EQ:{
-						int sum = Stream.of(StringUtils.split(column.getPerms(),"")).mapToInt(perm -> Integer.parseInt(perm)).sum();
-						parts.add(String.format(column.getCondition().getOperator(), sum, alias, column.getColumn()));
+						StringBuilder partSQL = new StringBuilder();
+						partSQL.append(" ( ");
+						partSQL.append(Stream.of(StringUtils.split(column.getPerms(),","))
+								.map(perm -> String.format(column.getCondition().getOperator(), Integer.parseInt(perm), alias, column.getColumn())).collect(Collectors.joining(" OR ")));
+						partSQL.append(" ) ");
+						parts.add(partSQL.toString());
 					};break;
 					case EXISTS:
 					case NOT_EXISTS:{
@@ -105,11 +114,14 @@ public class DefaultTablePermissionAutowireHandler implements ITablePermissionAu
 							case LIKE:
 							case LIKE_LEFT:
 							case LIKE_RIGHT:{
-								partSQL.append(String.format(foreign.getCondition().getOperator(), "fkt", foreign.getColumn(), StringUtils.quote(column.getPerms())));
+								partSQL.append(" AND ( ");
+								partSQL.append(Stream.of(StringUtils.split(column.getPerms(),","))
+										.map(perm -> String.format(foreign.getCondition().getOperator(), "fkt", foreign.getColumn(), StringUtils.quote(perm))).collect(Collectors.joining(" OR ")));
+								partSQL.append(" ) ");
 							};break;
 							case IN:{
 								String inPart = Stream.of(StringUtils.split(column.getPerms(),","))
-									.map(perms -> StringUtils.quote(perms)).collect(Collectors.joining(","));
+									.map(perm -> StringUtils.quote(perm)).collect(Collectors.joining(","));
 								partSQL.append(String.format(foreign.getCondition().getOperator(), "fkt", foreign.getColumn(), inPart));
 							};break;
 							case BITAND_GT:
@@ -117,8 +129,10 @@ public class DefaultTablePermissionAutowireHandler implements ITablePermissionAu
 							case BITAND_LT:
 							case BITAND_LTE:
 							case BITAND_EQ:{
-								int sum = Stream.of(StringUtils.split(column.getPerms(),"")).mapToInt(perm->Integer.parseInt(perm)).sum();
-								partSQL.append(String.format(foreign.getCondition().getOperator(), sum, "fkt", foreign.getColumn()));
+								partSQL.append(" AND ( ");
+								partSQL.append(Stream.of(StringUtils.split(column.getPerms(),","))
+										.map(perm -> String.format(foreign.getCondition().getOperator(), Integer.parseInt(perm), "fkt", foreign.getColumn())).collect(Collectors.joining(" OR ")));
+								partSQL.append(" ) ");
 							};break;
 							default:{};break;
 						}
