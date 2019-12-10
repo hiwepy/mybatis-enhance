@@ -100,7 +100,7 @@ public class DataPermissionStatementInterceptor extends AbstractDataPermissionIn
 			}
 			
 			// 获取接口类型
-			Class<?> mapperInterface = metaStatementHandler.getMapperProxy().getMapperInterface();
+			Class<?> mapperInterface = metaStatementHandler.getMapperInterface();
 			permissions = AnnotationUtils.findAnnotation(mapperInterface, RequiresPermissions.class);
 			// 需要权限控制
 			if(permissions != null) {

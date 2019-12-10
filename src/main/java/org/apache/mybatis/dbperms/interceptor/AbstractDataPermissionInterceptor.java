@@ -47,7 +47,7 @@ public abstract class AbstractDataPermissionInterceptor extends AbstractIntercep
 		//提取被国际化注解标记的方法
 		Method method = metaStatementHandler.getMethod(); 
 		// 获取接口类型
-		Class<?> mapperInterface = metaStatementHandler.getMapperProxy().getMapperInterface();
+		Class<?> mapperInterface = metaStatementHandler.getMapperInterface();
 		
 		//BeanMethodDefinitionFactory.getMethodDefinition(mappedStatement.getId(), paramObject != null ? new Class<?>[] {paramObject.getClass()} : null);
 		return  SqlCommandType.SELECT.equals(mappedStatement.getSqlCommandType()) && method != null &&

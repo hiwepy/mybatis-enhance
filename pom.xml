@@ -395,8 +395,10 @@
 		<maven-surefire-plugin.vertsion>2.21.0</maven-surefire-plugin.vertsion>
 		<maven-source-plugin.version>3.0.1</maven-source-plugin.version>
 		<maven-nexus-staging-plugin.version>1.6.8</maven-nexus-staging-plugin.version>
-		<mybatis.version>3.4.6</mybatis.version>
-		<mybatis-spring.version>1.3.2</mybatis-spring.version>
+		<mybatis.version>3.5.3</mybatis.version>
+		<mybatis-biz.version>1.0.0-SNAPSHOT</mybatis-biz.version>
+		<mybatis-spring.version>2.0.3</mybatis-spring.version>
+		<mybatis-plus.version>3.3.0</mybatis-plus.version>
 	</properties>
 
 	<dependencyManagement>
@@ -465,6 +467,18 @@
 			    <artifactId>mybatis-spring</artifactId>
 			    <version>${mybatis-spring.version}</version>
 			</dependency>
+			<dependency>
+				<groupId>com.github.vindell</groupId>
+				<artifactId>mybatis-biz</artifactId>
+				<version>${mybatis-biz.version}</version>
+			</dependency>
+			<!-- https://mvnrepository.com/artifact/com.baomidou/mybatis-plus -->
+			<dependency>
+			    <groupId>com.baomidou</groupId>
+			    <artifactId>mybatis-plus</artifactId>
+			    <version>${mybatis-plus.version}</version>
+			</dependency>
+						
 
 		</dependencies>
 	</dependencyManagement>
@@ -513,6 +527,14 @@
 		    <groupId>org.mybatis</groupId>
 		    <artifactId>mybatis-spring</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>com.github.vindell</groupId>
+			<artifactId>mybatis-biz</artifactId>
+		</dependency>
+		<dependency>
+		    <groupId>com.baomidou</groupId>
+		    <artifactId>mybatis-plus</artifactId>
+		</dependency>
 		 <!-- https://mvnrepository.com/artifact/com.github.jsqlparser/jsqlparser -->
 		<dependency>
 		    <groupId>com.github.jsqlparser</groupId>
@@ -532,12 +554,6 @@
 			<scope>provided</scope>
 		</dependency>
 		
-		<dependency>
-			<groupId>com.github.vindell</groupId>
-			<artifactId>mybatis-biz</artifactId>
-			<version>1.0.0-SNAPSHOT</version>
-		</dependency>
-
 	</dependencies>
 
 
