@@ -16,12 +16,15 @@
 package org.apache.mybatis.dbperms.interceptor;
 
 import java.lang.reflect.Method;
+import java.sql.Connection;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.mapping.BoundSql;
+import org.apache.ibatis.plugin.Intercepts;
 import org.apache.ibatis.plugin.Invocation;
 import org.apache.ibatis.plugin.Plugin;
+import org.apache.ibatis.plugin.Signature;
 import org.apache.ibatis.plugin.meta.MetaStatementHandler;
 import org.apache.ibatis.reflection.MetaObject;
 import org.apache.ibatis.utils.MetaObjectUtils;
@@ -33,6 +36,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotationUtils;
 
+@Intercepts({
+	@Signature(type = StatementHandler.class, method = "prepare", args = {Connection.class, Integer.class})
+})
 public class DataPermissionStatementInterceptor extends AbstractDataPermissionInterceptor {
 
 	protected static Logger LOG = LoggerFactory.getLogger(DataPermissionStatementInterceptor.class);
