@@ -19,21 +19,22 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.plugin.meta.MetaStatementHandler;
 import org.apache.mybatis.dbperms.interceptor.DataPermission;
 import org.apache.mybatis.dbperms.interceptor.DataPermissionColumn;
 import org.apache.mybatis.dbperms.interceptor.DataPermissionForeign;
+import org.apache.mybatis.dbperms.utils.RandomString;
+import org.apache.mybatis.dbperms.utils.StringUtils;
 
 /**
  * 根据注解的权限信息组装权限语句
  * @author <a href="https://github.com/vindell">vindell</a>
  */
 public class DefaultTablePermissionAutowireHandler implements ITablePermissionAutowireHandler {
-
+	protected static RandomString randomString = new RandomString(4);
 	private BiFunction<MetaStatementHandler, String, Optional<DataPermission>> permissionProvider;
 	
 	public DefaultTablePermissionAutowireHandler(BiFunction<MetaStatementHandler, String, Optional<DataPermission>> permissionProvider) {
@@ -47,15 +48,19 @@ public class DefaultTablePermissionAutowireHandler implements ITablePermissionAu
 		String parsedSql = tableName; 
 		if(null != permission && permission.isPresent()) {
 				
-			String alias = RandomStringUtils.random(3);
+			int tindex = 0;
+			String alias = "t" + tindex;
 			
 			StringBuilder builder = new StringBuilder();
 			builder.append("(");
-			builder.append("SELECT ").append(alias).append(".*");
+			builder.append("SELECT ").append(alias).append(".* ");
 			builder.append("FROM ").append(permission.get().getTable()).append(" ").append(alias);
 			// 构建数据限制条件SQL
 			List<String> parts = new ArrayList<String>();
 			for (DataPermissionColumn column : permission.get().getColumns()) {
+				if(!StringUtils.isNotBlank(column.getPerms())) {
+					continue;
+				}
 				switch (column.getCondition()) {
 					case GT:
 					case GTE:
@@ -63,11 +68,15 @@ public class DefaultTablePermissionAutowireHandler implements ITablePermissionAu
 					case LTE:
 					case EQ:
 					case NE:
-					case IN:
 					case LIKE:
 					case LIKE_LEFT:
 					case LIKE_RIGHT:{
-						parts.add(String.format(column.getCondition().toString(), alias, column.getColumn(), column.getPerms()));
+						parts.add(String.format(column.getCondition().getOperator(), alias, column.getColumn(), StringUtils.quote(column.getPerms())));
+					};break;
+					case IN:{
+						String inPart = Stream.of(StringUtils.split(column.getPerms(),","))
+							.map(perms -> StringUtils.quote(perms)).collect(Collectors.joining(","));
+						parts.add(String.format(column.getCondition().getOperator(), alias, column.getColumn(), inPart));
 					};break;
 					case BITAND_GT:
 					case BITAND_GTE:
@@ -75,7 +84,7 @@ public class DefaultTablePermissionAutowireHandler implements ITablePermissionAu
 					case BITAND_LTE:
 					case BITAND_EQ:{
 						int sum = Stream.of(StringUtils.split(column.getPerms(),"")).mapToInt(perm -> Integer.parseInt(perm)).sum();
-						parts.add(String.format(column.getCondition().toString(), sum, alias, column.getColumn()));
+						parts.add(String.format(column.getCondition().getOperator(), sum, alias, column.getColumn()));
 					};break;
 					case EXISTS:
 					case NOT_EXISTS:{
@@ -93,11 +102,15 @@ public class DefaultTablePermissionAutowireHandler implements ITablePermissionAu
 							case LTE:
 							case EQ:
 							case NE:
-							case IN:
 							case LIKE:
 							case LIKE_LEFT:
 							case LIKE_RIGHT:{
-								partSQL.append(String.format(foreign.getCondition().toString(), "fkt", foreign.getColumn(), column.getPerms()));
+								partSQL.append(String.format(foreign.getCondition().getOperator(), "fkt", foreign.getColumn(), StringUtils.quote(column.getPerms())));
+							};break;
+							case IN:{
+								String inPart = Stream.of(StringUtils.split(column.getPerms(),","))
+									.map(perms -> StringUtils.quote(perms)).collect(Collectors.joining(","));
+								partSQL.append(String.format(foreign.getCondition().getOperator(), "fkt", foreign.getColumn(), inPart));
 							};break;
 							case BITAND_GT:
 							case BITAND_GTE:
@@ -105,16 +118,17 @@ public class DefaultTablePermissionAutowireHandler implements ITablePermissionAu
 							case BITAND_LTE:
 							case BITAND_EQ:{
 								int sum = Stream.of(StringUtils.split(column.getPerms(),"")).mapToInt(perm->Integer.parseInt(perm)).sum();
-								partSQL.append(String.format(foreign.getCondition().toString(), sum, "fkt", foreign.getColumn()));
+								partSQL.append(String.format(foreign.getCondition().getOperator(), sum, "fkt", foreign.getColumn()));
 							};break;
 							default:{};break;
 						}
-						parts.add(String.format(column.getCondition().toString(), partSQL.toString()));
+						parts.add(String.format(column.getCondition().getOperator(), partSQL.toString()));
 					};break;
 					default:{};break;
 				}
+				tindex ++;
 			}
-			builder.append("WHERE ").append(StringUtils.join(parts, permission.get().getRelation().toString() ));
+			builder.append(" WHERE ").append(StringUtils.join(parts, permission.get().getRelation().getOperator() ));
 			builder.append(")");
 			
 			parsedSql = builder.toString();

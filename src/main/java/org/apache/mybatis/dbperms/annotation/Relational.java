@@ -59,6 +59,10 @@ public enum Relational {
 		return mapList;
 	}
 	
+	public String getOperator() {
+		return operator;
+	}
+	
 	public String getPlaceholder() {
 		return placeholder;
 	}
