@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.ibatis.plugin.meta.MetaStatementHandler;
+import org.apache.mybatis.dbperms.annotation.Relational;
 import org.apache.mybatis.dbperms.interceptor.DataPermission;
 import org.apache.mybatis.dbperms.interceptor.DataPermissionColumn;
 import org.apache.mybatis.dbperms.interceptor.DataPermissionForeign;
@@ -34,19 +35,21 @@ import org.apache.mybatis.dbperms.utils.StringUtils;
  * @author <a href="https://github.com/vindell">vindell</a>
  */
 public class DefaultTablePermissionAutowireHandler implements ITablePermissionAutowireHandler {
-	protected static RandomString randomString = new RandomString(4);
-	private BiFunction<MetaStatementHandler, String, Optional<DataPermission>> permissionProvider;
 	
-	public DefaultTablePermissionAutowireHandler(BiFunction<MetaStatementHandler, String, Optional<DataPermission>> permissionProvider) {
-		this.permissionProvider = permissionProvider;
+	protected static RandomString randomString = new RandomString(4);
+	private BiFunction<MetaStatementHandler, String, Optional<List<DataPermission>>> permissionsProvider;
+	
+	public DefaultTablePermissionAutowireHandler(
+			BiFunction<MetaStatementHandler, String, Optional<List<DataPermission>>> permissionsProvider) {
+		this.permissionsProvider = permissionsProvider;
 	}
 	
 	@Override
 	public String dynamicPermissionedSQL(MetaStatementHandler metaHandler, String tableName) {
 		
-		Optional<DataPermission> permission = permissionProvider.apply(metaHandler, tableName);
+		Optional<List<DataPermission>> permissions = permissionsProvider.apply(metaHandler, tableName);
 		String parsedSql = tableName; 
-		if(null != permission && permission.isPresent()) {
+		if(null != permissions && permissions.isPresent()) {
 				
 			int tindex = 0;
 			String alias = "t" + tindex;
@@ -54,95 +57,103 @@ public class DefaultTablePermissionAutowireHandler implements ITablePermissionAu
 			StringBuilder builder = new StringBuilder();
 			builder.append("(");
 			builder.append("SELECT ").append(alias).append(".* ");
-			builder.append("FROM ").append(permission.get().getTable()).append(" ").append(alias);
-			// 构建数据限制条件SQL
-			List<String> parts = new ArrayList<String>();
-			for (DataPermissionColumn column : permission.get().getColumns()) {
-				if(!StringUtils.isNotBlank(column.getPerms())) {
-					continue;
+			builder.append("FROM ").append(tableName).append(" ").append(alias);
+			// 构建限制条件
+			List<String> columnParts = new ArrayList<String>();
+			for (DataPermission permission : permissions.get()) {
+				
+				// 构建数据限制条件SQL
+				List<String> parts = new ArrayList<String>();
+				for (DataPermissionColumn column : permission.getColumns()) {
+					if(!StringUtils.isNotBlank(column.getPerms())) {
+						continue;
+					}
+					switch (column.getCondition()) {
+						case GT:
+						case GTE:
+						case LT:
+						case LTE:
+						case EQ:
+						case NE:
+						case LIKE:
+						case LIKE_LEFT:
+						case LIKE_RIGHT:{
+							StringBuilder partSQL = new StringBuilder();
+							partSQL.append(" ( ");
+							partSQL.append(Stream.of(StringUtils.split(column.getPerms(),","))
+									.map(perm -> String.format(column.getCondition().getOperator(), alias, column.getColumn(), StringUtils.quote(perm))).collect(Collectors.joining(" OR ")));
+							partSQL.append(" ) ");
+							parts.add(partSQL.toString());
+						};break;
+						case IN:{
+							String inPart = Stream.of(StringUtils.split(column.getPerms(),","))
+								.map(perm -> StringUtils.quote(perm)).collect(Collectors.joining(","));
+							parts.add(String.format(column.getCondition().getOperator(), alias, column.getColumn(), inPart));
+						};break;
+						case BITAND_GT:
+						case BITAND_GTE:
+						case BITAND_LT:
+						case BITAND_LTE:
+						case BITAND_EQ:{
+							StringBuilder partSQL = new StringBuilder();
+							partSQL.append(" ( ");
+							partSQL.append(Stream.of(StringUtils.split(column.getPerms(),","))
+									.map(perm -> String.format(column.getCondition().getOperator(), Integer.parseInt(perm), alias, column.getColumn())).collect(Collectors.joining(" OR ")));
+							partSQL.append(" ) ");
+							parts.add(partSQL.toString());
+						};break;
+						case EXISTS:
+						case NOT_EXISTS:{
+							DataPermissionForeign foreign = column.getForeign();
+							StringBuilder partSQL = new StringBuilder();
+							// 开始构建关联SQL
+							partSQL.append(" SELECT ").append(" fkt.").append(foreign.getColumn());
+							partSQL.append(" FROM ").append(foreign.getTable()).append(" fkt ");
+							partSQL.append(" WHERE ").append(" fkt.").append(foreign.getColumn()).append(" = ").append(alias).append(column.getColumn());
+							// 构建两个表关联关系条件SQL
+							switch (foreign.getCondition()) {
+								case GT:
+								case GTE:
+								case LT:
+								case LTE:
+								case EQ:
+								case NE:
+								case LIKE:
+								case LIKE_LEFT:
+								case LIKE_RIGHT:{
+									partSQL.append(" AND ( ");
+									partSQL.append(Stream.of(StringUtils.split(column.getPerms(),","))
+											.map(perm -> String.format(foreign.getCondition().getOperator(), "fkt", foreign.getColumn(), StringUtils.quote(perm))).collect(Collectors.joining(" OR ")));
+									partSQL.append(" ) ");
+								};break;
+								case IN:{
+									String inPart = Stream.of(StringUtils.split(column.getPerms(),","))
+										.map(perm -> StringUtils.quote(perm)).collect(Collectors.joining(","));
+									partSQL.append(String.format(foreign.getCondition().getOperator(), "fkt", foreign.getColumn(), inPart));
+								};break;
+								case BITAND_GT:
+								case BITAND_GTE:
+								case BITAND_LT:
+								case BITAND_LTE:
+								case BITAND_EQ:{
+									partSQL.append(" AND ( ");
+									partSQL.append(Stream.of(StringUtils.split(column.getPerms(),","))
+											.map(perm -> String.format(foreign.getCondition().getOperator(), Integer.parseInt(perm), "fkt", foreign.getColumn())).collect(Collectors.joining(" OR ")));
+									partSQL.append(" ) ");
+								};break;
+								default:{};break;
+							}
+							parts.add(String.format(column.getCondition().getOperator(), partSQL.toString()));
+						};break;
+						default:{};break;
+					}
+					tindex ++;
 				}
-				switch (column.getCondition()) {
-					case GT:
-					case GTE:
-					case LT:
-					case LTE:
-					case EQ:
-					case NE:
-					case LIKE:
-					case LIKE_LEFT:
-					case LIKE_RIGHT:{
-						StringBuilder partSQL = new StringBuilder();
-						partSQL.append(" ( ");
-						partSQL.append(Stream.of(StringUtils.split(column.getPerms(),","))
-								.map(perm -> String.format(column.getCondition().getOperator(), alias, column.getColumn(), StringUtils.quote(perm))).collect(Collectors.joining(" OR ")));
-						partSQL.append(" ) ");
-						parts.add(partSQL.toString());
-					};break;
-					case IN:{
-						String inPart = Stream.of(StringUtils.split(column.getPerms(),","))
-							.map(perm -> StringUtils.quote(perm)).collect(Collectors.joining(","));
-						parts.add(String.format(column.getCondition().getOperator(), alias, column.getColumn(), inPart));
-					};break;
-					case BITAND_GT:
-					case BITAND_GTE:
-					case BITAND_LT:
-					case BITAND_LTE:
-					case BITAND_EQ:{
-						StringBuilder partSQL = new StringBuilder();
-						partSQL.append(" ( ");
-						partSQL.append(Stream.of(StringUtils.split(column.getPerms(),","))
-								.map(perm -> String.format(column.getCondition().getOperator(), Integer.parseInt(perm), alias, column.getColumn())).collect(Collectors.joining(" OR ")));
-						partSQL.append(" ) ");
-						parts.add(partSQL.toString());
-					};break;
-					case EXISTS:
-					case NOT_EXISTS:{
-						DataPermissionForeign foreign = column.getForeign();
-						StringBuilder partSQL = new StringBuilder();
-						// 开始构建关联SQL
-						partSQL.append(" SELECT ").append(" fkt.").append(foreign.getColumn());
-						partSQL.append(" FROM ").append(foreign.getTable()).append(" fkt ");
-						partSQL.append(" WHERE ").append(" fkt.").append(foreign.getColumn()).append(" = ").append(alias).append(column.getColumn());
-						// 构建两个表关联关系条件SQL
-						switch (foreign.getCondition()) {
-							case GT:
-							case GTE:
-							case LT:
-							case LTE:
-							case EQ:
-							case NE:
-							case LIKE:
-							case LIKE_LEFT:
-							case LIKE_RIGHT:{
-								partSQL.append(" AND ( ");
-								partSQL.append(Stream.of(StringUtils.split(column.getPerms(),","))
-										.map(perm -> String.format(foreign.getCondition().getOperator(), "fkt", foreign.getColumn(), StringUtils.quote(perm))).collect(Collectors.joining(" OR ")));
-								partSQL.append(" ) ");
-							};break;
-							case IN:{
-								String inPart = Stream.of(StringUtils.split(column.getPerms(),","))
-									.map(perm -> StringUtils.quote(perm)).collect(Collectors.joining(","));
-								partSQL.append(String.format(foreign.getCondition().getOperator(), "fkt", foreign.getColumn(), inPart));
-							};break;
-							case BITAND_GT:
-							case BITAND_GTE:
-							case BITAND_LT:
-							case BITAND_LTE:
-							case BITAND_EQ:{
-								partSQL.append(" AND ( ");
-								partSQL.append(Stream.of(StringUtils.split(column.getPerms(),","))
-										.map(perm -> String.format(foreign.getCondition().getOperator(), Integer.parseInt(perm), "fkt", foreign.getColumn())).collect(Collectors.joining(" OR ")));
-								partSQL.append(" ) ");
-							};break;
-							default:{};break;
-						}
-						parts.add(String.format(column.getCondition().getOperator(), partSQL.toString()));
-					};break;
-					default:{};break;
-				}
-				tindex ++;
+				// 添加每列的限制条件
+				columnParts.add(StringUtils.join(parts, permission.getRelation().getOperator()));
 			}
-			builder.append(" WHERE ").append(StringUtils.join(parts, permission.get().getRelation().getOperator() ));
+			
+			builder.append(" WHERE ").append(StringUtils.join(columnParts, Relational.AND.getOperator()));
 			builder.append(")");
 			
 			parsedSql = builder.toString();
