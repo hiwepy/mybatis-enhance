@@ -153,7 +153,15 @@ public class DefaultTablePermissionAutowireHandler implements ITablePermissionAu
 				columnParts.add(StringUtils.join(parts, permission.getRelation().getOperator()));
 			}
 			
-			builder.append(" WHERE ").append(StringUtils.join(columnParts, Relational.AND.getOperator()));
+			if(columnParts.size() > 0) {
+				builder.append(" WHERE ");
+				if(columnParts.size() > 1) {
+					builder.append(columnParts.stream().map(part -> " ( " + part + " ) ").collect(Collectors.joining(Relational.AND.getOperator())));
+				} else {
+					builder.append(columnParts.get(0));
+				}
+			}
+			
 			builder.append(")");
 			
 			parsedSql = builder.toString();
