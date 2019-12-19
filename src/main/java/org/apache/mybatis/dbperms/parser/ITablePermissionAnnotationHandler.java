@@ -15,8 +15,7 @@
  */
 package org.apache.mybatis.dbperms.parser;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Optional;
 
 import org.apache.ibatis.plugin.meta.MetaStatementHandler;
 import org.apache.mybatis.dbperms.annotation.RequiresPermission;
@@ -35,23 +34,12 @@ public interface ITablePermissionAnnotationHandler {
      * @param tableName  表名
      * @return
      */
-    default String process(MetaStatementHandler metaHandler, String originalSQL, RequiresPermission permission) {
+    default Optional<String> process(MetaStatementHandler metaHandler, String originalSQL, RequiresPermission permission) {
         String permissionedSQL = dynamicPermissionedSQL(metaHandler, permission);
         if (null != permissionedSQL) {
-        	Pattern pattern_find = Pattern.compile("(" + permission.table() + ")+");
-        	// 匹配所有匹配的表名
-    		Matcher matcher = pattern_find.matcher(originalSQL);
-    		// 查找匹配的片段
-			while (matcher.find()) {
-				// 获取匹配的内容
-				String full_segment = matcher.group(0);
-				// 取得{}内容开始结束位置
-				int begain = originalSQL.indexOf(full_segment);
-				int end = begain + full_segment.length();
-				originalSQL = originalSQL.substring(0, begain) + permissionedSQL + originalSQL.substring(end);
-			}
+        	return Optional.of(permissionedSQL);
         }
-        return originalSQL;
+        return Optional.empty();
     }
 
     /**
