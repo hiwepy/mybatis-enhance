@@ -24,6 +24,7 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -100,18 +101,20 @@ public class TablePermissionAnnotationParser implements ITablePermissionParser {
         	List<String> parsedTables = new ArrayList<String>();
         	// 表名统一转成小写、去重后的表名
         	List<String> distinctTables = tables.stream().map(table -> StringUtils.lowerCase(table)).distinct().collect(Collectors.toList());
-			for (RequiresPermission permission : permissionArr) {
-				// 表名统一转成小写
-				String tableName = StringUtils.lowerCase(permission.table());
+			// 按表名分组
+        	Map<String, List<RequiresPermission>> groupingMap = Stream.of(permissionArr).collect(Collectors.groupingBy(RequiresPermission::table));
+        	
+        	for (String table : groupingMap.keySet()) {
+        		// 表名统一转成小写
+				String tableName = StringUtils.lowerCase(table);
             	// 判断表格是否已经处理过
             	if(parsedTables.contains(tableName)) {
             		continue;
             	}
             	// 有处理器且有匹配的权限控制
-				if(null != tablePermissionHandler && tablePermissionHandler.match(metaHandler, tableName)
-						&& distinctTables.stream().anyMatch(table -> StringUtils.equalsAnyIgnoreCase(table, tableName))) {
+				if(null != tablePermissionHandler && tablePermissionHandler.match(metaHandler, tableName) && distinctTables.contains(tableName)) {
 					// 处理后的SQL	
-                	Optional<String> permissionedSQL = tablePermissionHandler.process(metaHandler, parsedSQL, permission);
+                	Optional<String> permissionedSQL = tablePermissionHandler.process(metaHandler, parsedSQL, groupingMap.get(table));
                 	if (null != permissionedSQL && permissionedSQL.isPresent()) {
                 		Map<String, String> parsedMap = new HashMap<String, String>();
                 		parsedMap.put("table", tableName);
@@ -172,7 +175,7 @@ public class TablePermissionAnnotationParser implements ITablePermissionParser {
         	String tableName = StringUtils.lowerCase(permission.table());
         	// 有处理器且有匹配的权限控制
 			if(null != tablePermissionHandler && tablePermissionHandler.match(metaHandler, tableName)
-					&& distinctTables.stream().anyMatch(table -> StringUtils.equalsAnyIgnoreCase(table, tableName))) {
+					&& distinctTables.contains(tableName)) {
 				// 处理后的SQL	
             	Optional<String> permissionedSQL = tablePermissionHandler.process(metaHandler, parsedSQL, permission);
             	if (null != permissionedSQL && permissionedSQL.isPresent()) {

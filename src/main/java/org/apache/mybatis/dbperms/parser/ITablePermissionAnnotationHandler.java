@@ -15,6 +15,7 @@
  */
 package org.apache.mybatis.dbperms.parser;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.apache.ibatis.plugin.meta.MetaStatementHandler;
@@ -43,6 +44,22 @@ public interface ITablePermissionAnnotationHandler {
     }
 
     /**
+     * 表名 SQL 处理
+     *
+     * @param metaHandler 元对象
+     * @param originalSQL        当前执行 SQL
+     * @param tableName  表名
+     * @return
+     */
+    default Optional<String> process(MetaStatementHandler metaHandler, String originalSQL, List<RequiresPermission> permissions) {
+        String permissionedSQL = dynamicPermissionedSQL(metaHandler, permissions);
+        if (null != permissionedSQL) {
+        	return Optional.of(permissionedSQL);
+        }
+        return Optional.empty();
+    }
+    
+    /**
      * <p>
      * 是否执行 SQL 解析 parser 方法
      * </p>
@@ -55,7 +72,7 @@ public interface ITablePermissionAnnotationHandler {
         // 默认 true 执行 SQL 解析, 可重写实现控制逻辑
         return true;
     }
-    
+
     /**
      * 生成动态表名，无改变返回 NULL
      *
@@ -65,5 +82,15 @@ public interface ITablePermissionAnnotationHandler {
      * @return String
      */
     String dynamicPermissionedSQL(MetaStatementHandler metaHandler, RequiresPermission permission);
+    
+    /**
+     * 生成动态表名，无改变返回 NULL
+     *
+     * @param metaHandler 元对象
+     * @param sql        当前执行 SQL
+     * @param tableName  表名
+     * @return String
+     */
+    String dynamicPermissionedSQL(MetaStatementHandler metaHandler, List<RequiresPermission> permissions);
     
 }

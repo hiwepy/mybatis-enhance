@@ -48,7 +48,6 @@ public class DefaultTablePermissionAutowireHandler implements ITablePermissionAu
 	public String dynamicPermissionedSQL(MetaStatementHandler metaHandler, String tableName) {
 		
 		Optional<List<DataPermission>> permissions = permissionsProvider.apply(metaHandler, tableName);
-		String parsedSql = tableName; 
 		if(null != permissions && permissions.isPresent()) {
 				
 			int tindex = 0;
@@ -156,7 +155,7 @@ public class DefaultTablePermissionAutowireHandler implements ITablePermissionAu
 			if(columnParts.size() > 0) {
 				builder.append(" WHERE ");
 				if(columnParts.size() > 1) {
-					builder.append(columnParts.stream().map(part -> " ( " + part + " ) ").collect(Collectors.joining(Relational.AND.getOperator())));
+					builder.append(columnParts.stream().map(part -> " ( " + part + " ) ").collect(Collectors.joining(Relational.OR.getOperator())));
 				} else {
 					builder.append(columnParts.get(0));
 				}
@@ -164,11 +163,10 @@ public class DefaultTablePermissionAutowireHandler implements ITablePermissionAu
 			
 			builder.append(")");
 			
-			parsedSql = builder.toString();
-			
+			return builder.toString();
 		}
 		
-		return parsedSql;
+		return null;
 	}
 
 }
