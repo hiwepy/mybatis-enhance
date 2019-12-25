@@ -160,8 +160,10 @@ public class DefaultTablePermissionAutowireHandler implements ITablePermissionAu
 					}
 					tindex ++;
 				}
-				// 添加每列的限制条件
-				columnParts.add(StringUtils.join(parts, permission.getRelation().getOperator()));
+				if (CollectionUtils.isNotEmpty(parts)) {
+					// 添加每列的限制条件
+					columnParts.add(StringUtils.join(parts, permission.getRelation().getOperator()));
+				}
 			}
 			
 			if(columnParts.size() > 0) {

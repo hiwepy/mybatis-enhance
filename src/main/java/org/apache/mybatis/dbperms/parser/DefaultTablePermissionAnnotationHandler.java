@@ -254,7 +254,9 @@ public class DefaultTablePermissionAnnotationHandler implements ITablePermission
 					tindex ++;
 				}
 				// 添加每列的限制条件
-				columnParts.add(StringUtils.join(parts, permission.relation().getOperator()));
+				if (CollectionUtils.isNotEmpty(parts)) {
+					columnParts.add(StringUtils.join(parts, permission.relation().getOperator()));
+				}
 			}
 			
 			if(columnParts.size() > 0) {
