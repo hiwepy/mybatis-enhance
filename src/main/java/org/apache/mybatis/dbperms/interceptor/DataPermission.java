@@ -21,7 +21,7 @@ public class DataPermission {
 	/**
 	 *受限表转换后的SQL(直接使用SQL进行替换，减少性能消耗)
 	 */
-	private String wrapSQL;
+	private String sql;
 	/**
 	 * 数据权限项关系 and/or
 	 */

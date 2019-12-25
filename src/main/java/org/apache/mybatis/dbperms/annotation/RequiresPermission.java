@@ -38,7 +38,7 @@ public @interface RequiresPermission {
 	/**
 	 *受限表转换后的SQL(直接使用SQL进行替换，减少性能消耗)
 	 */
-	public abstract String wrapSQL() default "";
+	public abstract String sql() default "";
 	/**
 	 * 数据权限项数组
 	 */

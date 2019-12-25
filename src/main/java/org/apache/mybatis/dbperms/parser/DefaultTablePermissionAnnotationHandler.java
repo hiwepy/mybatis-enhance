@@ -39,8 +39,8 @@ public class DefaultTablePermissionAnnotationHandler implements ITablePermission
 	public String dynamicPermissionedSQL(MetaStatementHandler metaHandler, RequiresPermission permission) {
 		RequiresPermissionColumn[] columns = permission.value();
 		if(ArrayUtils.isNotEmpty(columns)) {
-			String wrapSQL = permission.wrapSQL();
-			if (StringUtils.isNotBlank(wrapSQL)) {
+			String trans = permission.sql();
+			if (StringUtils.isNotBlank(trans)) {
 				
 			} else {
 				int tindex = 0;

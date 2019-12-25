@@ -50,6 +50,7 @@
         </snapshotRepository>
     </distributionManagement>
 
+
 	<build>
 		<pluginManagement>
 			<plugins>
