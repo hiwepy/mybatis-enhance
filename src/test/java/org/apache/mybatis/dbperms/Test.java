@@ -18,6 +18,8 @@ package org.apache.mybatis.dbperms;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.mybatis.dbperms.annotation.Condition;
 import org.apache.mybatis.dbperms.annotation.ForeignCondition;
@@ -26,6 +28,7 @@ import org.apache.mybatis.dbperms.annotation.RequiresPermission;
 import org.apache.mybatis.dbperms.annotation.RequiresPermissionColumn;
 import org.apache.mybatis.dbperms.annotation.RequiresPermissionForeign;
 import org.apache.mybatis.dbperms.annotation.RequiresPermissions;
+import org.apache.mybatis.dbperms.utils.StringUtils;
 
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.statement.Statement;
@@ -78,6 +81,8 @@ public class Test {
 	
 	public static void main(String[] args) throws Exception {
 		
+		System.out.println(Stream.of(StringUtils.split("22,33,44",","))
+										.map(perm -> StringUtils.quote(perm)).collect(Collectors.joining(",")));
 		String originalSQL = "select t.xh,t.xsjbxxb_id,t.xqdmb_id,t.ssxy_id,t.zyfxdmb_id,t.zyh_id,t.xzbdmb_id,t.nj_id from xs_xsjbxxb t，xs_xsjbxxb 2";
 		Pattern pattern_find = Pattern.compile("(xs_xsjbxxb)+");
     	// 匹配所有匹配的表名

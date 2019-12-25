@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.ibatis.plugin.meta.MetaStatementHandler;
+import org.apache.ibatis.utils.CollectionUtils;
 import org.apache.mybatis.dbperms.annotation.Relational;
 import org.apache.mybatis.dbperms.interceptor.DataPermission;
 import org.apache.mybatis.dbperms.interceptor.DataPermissionColumn;
@@ -49,7 +50,18 @@ public class DefaultTablePermissionAutowireHandler implements ITablePermissionAu
 		
 		Optional<List<DataPermission>> permissions = permissionsProvider.apply(metaHandler, tableName);
 		if(null != permissions && permissions.isPresent()) {
-				
+			List<DataPermission> permissionsList = permissions.get();
+			if(CollectionUtils.isNotEmpty(permissionsList)) {
+				// 单条限制规则
+				if(permissionsList.size() == 1) {
+					DataPermission permission = permissionsList.get(0);
+					String wrapSQL = permission.getWrapSQL();
+					if (StringUtils.isNotBlank(wrapSQL)) {
+						
+					} 
+				}
+			}
+			
 			int tindex = 0;
 			String alias = "t" + tindex;
 			

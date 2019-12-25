@@ -38,6 +38,7 @@ import lombok.experimental.Accessors;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.statement.Statement;
+import net.sf.jsqlparser.statement.StatementVisitorAdapter;
 import net.sf.jsqlparser.statement.Statements;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.util.QueryTablesNamesFinder;
@@ -89,6 +90,12 @@ public class TablePermissionAnnotationParser implements ITablePermissionParser {
 					   for (String tableName : tableList) {
 						   tables.add(tableName);
 					   }
+					   /*
+					   selectStatement.accept(new StatementVisitorAdapter() {
+						   
+						   
+						   
+					   });*/
 				    }
 				}
 			} catch (JSQLParserException e) {
