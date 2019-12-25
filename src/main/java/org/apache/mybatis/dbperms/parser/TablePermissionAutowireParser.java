@@ -36,13 +36,14 @@ import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.Statements;
 import net.sf.jsqlparser.statement.select.Select;
-import net.sf.jsqlparser.util.TablesNamesFinder;
+import net.sf.jsqlparser.util.QueryTablesNamesFinder;
 
 @Data
 @Accessors(chain = true)
 public class TablePermissionAutowireParser implements ITablePermissionParser {
 	
-	private TablesNamesFinder tablesNamesFinder = new TablesNamesFinder(); 
+	//private TablesNamesFinder tablesNamesFinder = new TablesNamesFinder(); 
+	private QueryTablesNamesFinder tablesNamesFinder = new QueryTablesNamesFinder(); 
 	private ITablePermissionAutowireHandler tablePermissionHandler;
 
 	private volatile boolean initialized = false;
@@ -71,7 +72,8 @@ public class TablePermissionAutowireParser implements ITablePermissionParser {
     		 return sql;
 		}
     	this.init();
-        Collection<String> tables = new TableNameParser(sql).tables();
+        //Collection<String> tables = new TableNameParser(sql).tables();
+    	Collection<String> tables = new ArrayList<>();
         // 尝试另外一种方式
         if (CollectionUtils.isEmpty(tables)) {
         	try {
