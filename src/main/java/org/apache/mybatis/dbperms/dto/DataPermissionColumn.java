@@ -1,4 +1,4 @@
-package org.apache.mybatis.dbperms.interceptor;
+package org.apache.mybatis.dbperms.dto;
 
 import org.apache.mybatis.dbperms.annotation.Condition;
 

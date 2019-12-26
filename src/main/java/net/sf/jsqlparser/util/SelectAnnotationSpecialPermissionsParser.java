@@ -15,8 +15,17 @@
  */
 package net.sf.jsqlparser.util;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Stream;
+
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.ibatis.plugin.meta.MetaStatementHandler;
+import org.apache.mybatis.dbperms.annotation.RequiresSpecialPermission;
+import org.apache.mybatis.dbperms.parser.DefaultTablePermissionAnnotationHandler;
+import org.apache.mybatis.dbperms.parser.ITablePermissionAnnotationHandler;
 
 import net.sf.jsqlparser.expression.AllComparisonExpression;
 import net.sf.jsqlparser.expression.AnalyticExpression;
@@ -103,8 +112,7 @@ import net.sf.jsqlparser.statement.ExplainStatement;
 import net.sf.jsqlparser.statement.SetStatement;
 import net.sf.jsqlparser.statement.ShowColumnsStatement;
 import net.sf.jsqlparser.statement.ShowStatement;
-import net.sf.jsqlparser.statement.Statement;
-import net.sf.jsqlparser.statement.StatementVisitor;
+import net.sf.jsqlparser.statement.StatementVisitorAdapter;
 import net.sf.jsqlparser.statement.Statements;
 import net.sf.jsqlparser.statement.UseStatement;
 import net.sf.jsqlparser.statement.alter.Alter;
@@ -142,18 +150,20 @@ import net.sf.jsqlparser.statement.update.Update;
 import net.sf.jsqlparser.statement.upsert.Upsert;
 import net.sf.jsqlparser.statement.values.ValuesStatement;
 
-public class QueryTablesNamesFinder implements SelectVisitor, FromItemVisitor, ExpressionVisitor, ItemsListVisitor, SelectItemVisitor, StatementVisitor {
+public class SelectAnnotationSpecialPermissionsParser extends StatementVisitorAdapter
+		implements SelectVisitor, FromItemVisitor, ExpressionVisitor, ItemsListVisitor, SelectItemVisitor {
 
-    private static final String NOT_SUPPORTED_YET = "Not supported yet.";
-    private List<String> tables;
-    private List<String> otherItemNames;
-
-    public List<String> getTableList(Statement statement) {
-        init(false);
-        statement.accept(this);
-        return tables;
-    }
-
+	private static final String NOT_SUPPORTED_YET = "Not supported yet.";
+	private Map<String, String> parsedTables = new HashMap<>();
+	private ITablePermissionAnnotationHandler tablePermissionHandler = new DefaultTablePermissionAnnotationHandler();
+	private final MetaStatementHandler metaHandler;
+	private RequiresSpecialPermission[] permissions;
+	
+	public SelectAnnotationSpecialPermissionsParser(MetaStatementHandler metaHandler, RequiresSpecialPermission[] permissions) {
+		this.metaHandler = metaHandler;
+		this.permissions = permissions;
+	}
+	
     @Override
     public void visit(Select select) {
         if (select.getWithItemsList() != null) {
@@ -164,24 +174,14 @@ public class QueryTablesNamesFinder implements SelectVisitor, FromItemVisitor, E
         select.getSelectBody().accept(this);
     }
 
-    /**
-     * Main entry for this Tool class. A list of found tables is returned.
-     */
-    public List<String> getTableList(Expression expr) {
-        init(true);
-        expr.accept(this);
-        return tables;
-    }
-
     @Override
     public void visit(WithItem withItem) {
-        otherItemNames.add(withItem.getName().toLowerCase());
         withItem.getSelectBody().accept(this);
     }
 
     @Override
     public void visit(PlainSelect plainSelect) {
-
+    	
         if (plainSelect.getFromItem() != null) {
             plainSelect.getFromItem().accept(this);
         }
@@ -207,12 +207,29 @@ public class QueryTablesNamesFinder implements SelectVisitor, FromItemVisitor, E
     }
 
     @Override
-    public void visit(Table tableName) {
-        String tableWholeName = extractTableName(tableName);
-        if (!otherItemNames.contains(tableWholeName.toLowerCase())
-                && !tables.contains(tableWholeName)) {
-            tables.add(tableWholeName);
-        }
+    public void visit(Table table) {
+    	// 表名称
+        String tableWholeName = StringUtils.lowerCase(this.extractTableName(table));
+        // 权限注解
+        if (ArrayUtils.isNotEmpty(permissions)) {
+        	// 查找匹配的特殊权限
+        	Optional<RequiresSpecialPermission> optional = Stream.of(permissions)
+					.filter(permission -> StringUtils.equalsIgnoreCase(permission.table(), tableWholeName))
+					.findFirst();	
+        	// 有处理器
+            if (optional.isPresent() && null != tablePermissionHandler && !parsedTables.containsKey(tableWholeName)) {
+            	// 处理后的SQL	
+            	Optional<String> permissionedSQL = tablePermissionHandler.process(metaHandler, optional.get());
+            	if (null != permissionedSQL && permissionedSQL.isPresent()) {
+            		parsedTables.put(tableWholeName, permissionedSQL.get());
+                }
+            }
+            // 判断表格是否已经处理过
+        	if(parsedTables.containsKey(tableWholeName)) {
+        		// 将原来table替换为处理后的SQL 
+            	table.setName(parsedTables.get(tableWholeName));
+        	}
+		}
     }
 
     @Override
@@ -534,19 +551,6 @@ public class QueryTablesNamesFinder implements SelectVisitor, FromItemVisitor, E
 
     @Override
     public void visit(ValuesList valuesList) {
-    }
-
-    /**
-     * Initializes table names collector. Important is the usage of Column instances to find table
-     * names. This is only allowed for expression parsing, where a better place for tablenames could
-     * not be there. For complete statements only from items are used to avoid some alias as
-     * tablenames.
-     *
-     * @param allowColumnProcessing
-     */
-    protected void init(boolean allowColumnProcessing) {
-        otherItemNames = new ArrayList<String>();
-        tables = new ArrayList<String>();
     }
 
     @Override
@@ -875,5 +879,5 @@ public class QueryTablesNamesFinder implements SelectVisitor, FromItemVisitor, E
         array.getObjExpression().accept(this);
         array.getIndexExpression().accept(this);
     }
-    
+
 }

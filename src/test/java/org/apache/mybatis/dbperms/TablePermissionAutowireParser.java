@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.mybatis.dbperms.parser;
+package org.apache.mybatis.dbperms;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,6 +28,8 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.plugin.meta.MetaStatementHandler;
 import org.apache.ibatis.utils.CollectionUtils;
+import org.apache.mybatis.dbperms.parser.ITablePermissionAutowireHandler;
+import org.apache.mybatis.dbperms.parser.ITablePermissionParser;
 
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -42,8 +44,6 @@ import net.sf.jsqlparser.util.QueryTablesNamesFinder;
 @Accessors(chain = true)
 public class TablePermissionAutowireParser implements ITablePermissionParser {
 	
-	//private TablesNamesFinder tablesNamesFinder = new TablesNamesFinder(); 
-	private QueryTablesNamesFinder tablesNamesFinder = new QueryTablesNamesFinder(); 
 	private ITablePermissionAutowireHandler tablePermissionHandler;
 
 	private volatile boolean initialized = false;
@@ -75,21 +75,21 @@ public class TablePermissionAutowireParser implements ITablePermissionParser {
         //Collection<String> tables = new TableNameParser(sql).tables();
     	Collection<String> tables = new ArrayList<>();
         // 尝试另外一种方式
-        if (CollectionUtils.isEmpty(tables)) {
-        	try {
-				Statements statements = CCJSqlParserUtil.parseStatements(sql);
-				for (Statement statement : statements.getStatements()) {
-					if (null != statement && statement instanceof Select) { 
-					   Select selectStatement = (Select) statement; 
-					   List<String> tableList = tablesNamesFinder.getTableList(selectStatement);
-					   for (String tableName : tableList) {
-						   tables.add(tableName);
-					   }
-				    }
-				}
-			} catch (JSQLParserException e) {
+    	try {
+    		//TablesNamesFinder tablesNamesFinder = new TablesNamesFinder(); 
+    		QueryTablesNamesFinder tablesNamesFinder = new QueryTablesNamesFinder(); 
+			Statements statements = CCJSqlParserUtil.parseStatements(sql);
+			for (Statement statement : statements.getStatements()) {
+				if (null != statement && statement instanceof Select) { 
+				   Select selectStatement = (Select) statement; 
+				   List<String> tableList = tablesNamesFinder.getTableList(selectStatement);
+				   for (String tableName : tableList) {
+					   tables.add(tableName);
+				   }
+			    }
 			}
-        }
+		} catch (JSQLParserException e) {
+		}
         String parsedSQL = sql;
         if (CollectionUtils.isNotEmpty(tables)) {
         	List<Map<String, String>> parsedList = new ArrayList<Map<String,String>>();
@@ -102,9 +102,9 @@ public class TablePermissionAutowireParser implements ITablePermissionParser {
             		continue;
             	}
             	// 有处理器
-                if (null != tablePermissionHandler && tablePermissionHandler.match(metaHandler, tableName)) {
+                if (null != tablePermissionHandler) {
                 	// 处理后的SQL	
-                	Optional<String> permissionedSQL = tablePermissionHandler.process(metaHandler, parsedSQL, tableName);
+                	Optional<String> permissionedSQL = tablePermissionHandler.process(metaHandler, tableName);
                 	if (null != permissionedSQL && permissionedSQL.isPresent()) {
                 		Map<String, String> parsedMap = new HashMap<String, String>();
                 		parsedMap.put("table", tableName);

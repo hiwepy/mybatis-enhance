@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.mybatis.dbperms.parser;
+package org.apache.mybatis.dbperms;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -24,21 +24,24 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.plugin.meta.MetaStatementHandler;
 import org.apache.ibatis.utils.CollectionUtils;
 import org.apache.mybatis.dbperms.annotation.RequiresPermission;
-import org.apache.mybatis.dbperms.annotation.RequiresPermissions;
+import org.apache.mybatis.dbperms.annotation.RequiresSpecialPermission;
+import org.apache.mybatis.dbperms.parser.DefaultTablePermissionAnnotationHandler;
+import org.apache.mybatis.dbperms.parser.ITablePermissionAnnotationHandler;
+import org.apache.mybatis.dbperms.parser.ITablePermissionParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import lombok.Data;
 import lombok.experimental.Accessors;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.statement.Statement;
-import net.sf.jsqlparser.statement.StatementVisitorAdapter;
 import net.sf.jsqlparser.statement.Statements;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.util.QueryTablesNamesFinder;
@@ -47,7 +50,10 @@ import net.sf.jsqlparser.util.QueryTablesNamesFinder;
 @Accessors(chain = true)
 public class TablePermissionAnnotationParser implements ITablePermissionParser {
 
-	private QueryTablesNamesFinder tablesNamesFinder = new QueryTablesNamesFinder(); 
+	/**
+     * 日志
+     */
+	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	private ITablePermissionAnnotationHandler tablePermissionHandler = new DefaultTablePermissionAnnotationHandler();
 	
 	private volatile boolean initialized = false;
@@ -72,7 +78,7 @@ public class TablePermissionAnnotationParser implements ITablePermissionParser {
     protected void internalInit() {};
 	
 	
-    public String parser(MetaStatementHandler metaHandler, String sql, RequiresPermissions permissions) {
+    public String parser(MetaStatementHandler metaHandler, String sql, RequiresPermission[] permissions) {
     	if (!this.doFilter(metaHandler, sql)) {
    		 return sql;
 		}
@@ -80,49 +86,40 @@ public class TablePermissionAnnotationParser implements ITablePermissionParser {
     	//Collection<String> tables = new TableNameParser(sql).tables();
     	Collection<String> tables = new ArrayList<>();
         // 尝试另外一种方式
-        if (CollectionUtils.isEmpty(tables)) {
-        	try {
-				Statements statements = CCJSqlParserUtil.parseStatements(sql);
-				for (Statement statement : statements.getStatements()) {
-					if (null != statement && statement instanceof Select) { 
-					   Select selectStatement = (Select) statement; 
-					   List<String> tableList = tablesNamesFinder.getTableList(selectStatement);
-					   for (String tableName : tableList) {
-						   tables.add(tableName);
-					   }
-					   /*
-					   selectStatement.accept(new StatementVisitorAdapter() {
-						   
-						   
-						   
-					   });*/
-				    }
-				}
-			} catch (JSQLParserException e) {
+    	try {
+    		//TablesNamesFinder tablesNamesFinder = new TablesNamesFinder(); 
+    		QueryTablesNamesFinder tablesNamesFinder = new QueryTablesNamesFinder(); 
+			Statements statements = CCJSqlParserUtil.parseStatements(sql);
+			for (Statement statement : statements.getStatements()) {
+				if (null != statement && statement instanceof Select) { 
+				   Select selectStatement = (Select) statement; 
+				   List<String> tableList = tablesNamesFinder.getTableList(selectStatement);
+				   for (String tableName : tableList) {
+					   tables.add(tableName);
+				   }
+			    }
 			}
-        }
+		} catch (JSQLParserException e) {
+		}
         String parsedSQL = sql;
-        RequiresPermission[] permissionArr  = permissions.value();
-        if (CollectionUtils.isNotEmpty(tables) && ArrayUtils.isNotEmpty(permissionArr)) {
+        if (CollectionUtils.isNotEmpty(tables) && ArrayUtils.isNotEmpty(permissions)) {
         	
         	List<Map<String, String>> parsedList = new ArrayList<Map<String,String>>();
         	List<String> parsedTables = new ArrayList<String>();
         	// 表名统一转成小写、去重后的表名
         	List<String> distinctTables = tables.stream().map(table -> StringUtils.lowerCase(table)).distinct().collect(Collectors.toList());
-			// 按表名分组
-        	Map<String, List<RequiresPermission>> groupingMap = Stream.of(permissionArr).collect(Collectors.groupingBy(RequiresPermission::table));
-        	
-        	for (String table : groupingMap.keySet()) {
+			
+        	for (RequiresPermission permission : permissions) {
         		// 表名统一转成小写
-				String tableName = StringUtils.lowerCase(table);
+				String tableName = StringUtils.lowerCase(permission.table());
             	// 判断表格是否已经处理过
             	if(parsedTables.contains(tableName)) {
             		continue;
             	}
             	// 有处理器且有匹配的权限控制
-				if(null != tablePermissionHandler && tablePermissionHandler.match(metaHandler, tableName) && distinctTables.contains(tableName)) {
+				if(null != tablePermissionHandler && distinctTables.contains(tableName)) {
 					// 处理后的SQL	
-                	Optional<String> permissionedSQL = tablePermissionHandler.process(metaHandler, parsedSQL, groupingMap.get(table));
+                	Optional<String> permissionedSQL = tablePermissionHandler.process(metaHandler, permission);
                 	if (null != permissionedSQL && permissionedSQL.isPresent()) {
                 		Map<String, String> parsedMap = new HashMap<String, String>();
                 		parsedMap.put("table", tableName);
@@ -159,33 +156,33 @@ public class TablePermissionAnnotationParser implements ITablePermissionParser {
       		 return sql;
    		}
        	this.init();
-        Collection<String> tables = new TableNameParser(sql).tables();
+       	//Collection<String> tables = new TableNameParser(sql).tables();
+    	Collection<String> tables = new ArrayList<>();
         // 尝试另外一种方式
-        if (CollectionUtils.isEmpty(tables)) {
-        	try {
-				Statements statements = CCJSqlParserUtil.parseStatements(sql);
-				for (Statement statement : statements.getStatements()) {
-					if (null != statement && statement instanceof Select) { 
-					   Select selectStatement = (Select) statement; 
-					   List<String> tableList = tablesNamesFinder.getTableList(selectStatement);
-					   for (String tableName : tableList) {
-						   tables.add(tableName);
-					   }
-				    }
-				}
-			} catch (JSQLParserException e) {
+    	try {
+    		//TablesNamesFinder tablesNamesFinder = new TablesNamesFinder(); 
+    		QueryTablesNamesFinder tablesNamesFinder = new QueryTablesNamesFinder(); 
+			Statements statements = CCJSqlParserUtil.parseStatements(sql);
+			for (Statement statement : statements.getStatements()) {
+				if (null != statement && statement instanceof Select) { 
+				   Select selectStatement = (Select) statement; 
+				   List<String> tableList = tablesNamesFinder.getTableList(selectStatement);
+				   for (String tableName : tableList) {
+					   tables.add(tableName);
+				   }
+			    }
 			}
-        }
+		} catch (JSQLParserException e) {
+		}
         String parsedSQL = sql;
         if (CollectionUtils.isNotEmpty(tables) && null != permission) {
         	// 表名统一转成小写、去重后的表名
         	List<String> distinctTables = tables.stream().map(table -> StringUtils.lowerCase(table)).distinct().collect(Collectors.toList());
         	String tableName = StringUtils.lowerCase(permission.table());
         	// 有处理器且有匹配的权限控制
-			if(null != tablePermissionHandler && tablePermissionHandler.match(metaHandler, tableName)
-					&& distinctTables.contains(tableName)) {
+			if(null != tablePermissionHandler && distinctTables.contains(tableName)) {
 				// 处理后的SQL	
-            	Optional<String> permissionedSQL = tablePermissionHandler.process(metaHandler, parsedSQL, permission);
+            	Optional<String> permissionedSQL = tablePermissionHandler.process(metaHandler, permission);
             	if (null != permissionedSQL && permissionedSQL.isPresent()) {
             		
             		// 查找表名
@@ -210,5 +207,15 @@ public class TablePermissionAnnotationParser implements ITablePermissionParser {
 		}
         return parsedSQL;
     }
+
+	public String parser(MetaStatementHandler metaStatementHandler, String sql, RequiresSpecialPermission[] permissions) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public String parser(MetaStatementHandler metaStatementHandler, String sql, RequiresSpecialPermission specialPermission) {
+		return null;
+	}
+
     
 }

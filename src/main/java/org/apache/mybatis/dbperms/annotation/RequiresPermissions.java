@@ -17,4 +17,6 @@ public @interface RequiresPermissions {
 	
 	public abstract RequiresPermission[] value() default {};
 	
+	public abstract RequiresSpecialPermission[] special() default {};
+	
 }

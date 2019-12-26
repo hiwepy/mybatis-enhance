@@ -1,4 +1,4 @@
-package org.apache.mybatis.dbperms.interceptor;
+package org.apache.mybatis.dbperms.dto;
 
 import java.util.ArrayList;
 import java.util.List;

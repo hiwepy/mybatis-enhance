@@ -28,6 +28,7 @@ import org.apache.ibatis.plugin.Plugin;
 import org.apache.ibatis.plugin.meta.MetaStatementHandler;
 import org.apache.mybatis.dbperms.annotation.RequiresPermission;
 import org.apache.mybatis.dbperms.annotation.RequiresPermissions;
+import org.apache.mybatis.dbperms.annotation.RequiresSpecialPermission;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotationUtils;
@@ -52,7 +53,9 @@ public abstract class AbstractDataPermissionInterceptor extends AbstractIntercep
 		//BeanMethodDefinitionFactory.getMethodDefinition(mappedStatement.getId(), paramObject != null ? new Class<?>[] {paramObject.getClass()} : null);
 		return  SqlCommandType.SELECT.equals(mappedStatement.getSqlCommandType()) && method != null &&
 				(AnnotationUtils.findAnnotation(mapperInterface, RequiresPermissions.class) != null || 
-				 AnnotationUtils.findAnnotation(method, RequiresPermissions.class) != null || AnnotationUtils.findAnnotation(method, RequiresPermission.class) != null);
+				 AnnotationUtils.findAnnotation(method, RequiresPermissions.class) != null || 
+				 AnnotationUtils.findAnnotation(method, RequiresPermission.class) != null ||
+				 AnnotationUtils.findAnnotation(method, RequiresSpecialPermission.class) != null);
 	}
 	
 	protected boolean isIntercepted(CacheKey cacheKey) {

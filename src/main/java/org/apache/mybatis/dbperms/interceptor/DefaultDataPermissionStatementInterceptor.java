@@ -27,11 +27,12 @@ import org.apache.ibatis.plugin.Plugin;
 import org.apache.ibatis.plugin.Signature;
 import org.apache.ibatis.plugin.meta.MetaStatementHandler;
 import org.apache.ibatis.reflection.MetaObject;
-import org.apache.ibatis.utils.MetaObjectUtils;
+import org.apache.ibatis.reflection.SystemMetaObject;
 import org.apache.mybatis.dbperms.annotation.RequiresPermission;
 import org.apache.mybatis.dbperms.annotation.RequiresPermissions;
-import org.apache.mybatis.dbperms.parser.TablePermissionAnnotationParser;
-import org.apache.mybatis.dbperms.parser.TablePermissionAutowireParser;
+import org.apache.mybatis.dbperms.annotation.RequiresSpecialPermission;
+import org.apache.mybatis.dbperms.parser.def.TablePermissionAnnotationParser;
+import org.apache.mybatis.dbperms.parser.def.TablePermissionAutowireParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotationUtils;
@@ -39,13 +40,13 @@ import org.springframework.core.annotation.AnnotationUtils;
 @Intercepts({
 	@Signature(type = StatementHandler.class, method = "prepare", args = {Connection.class, Integer.class})
 })
-public class DataPermissionStatementInterceptor extends AbstractDataPermissionInterceptor {
+public class DefaultDataPermissionStatementInterceptor extends AbstractDataPermissionInterceptor {
 
-	protected static Logger LOG = LoggerFactory.getLogger(DataPermissionStatementInterceptor.class);
+	protected static Logger LOG = LoggerFactory.getLogger(DefaultDataPermissionStatementInterceptor.class);
 	protected final TablePermissionAutowireParser autowirePermissionParser;
 	protected final TablePermissionAnnotationParser annotationPermissionParser;
 	
-	public DataPermissionStatementInterceptor(TablePermissionAutowireParser autowirePermissionParser, TablePermissionAnnotationParser annotationPermissionParser) {
+	public DefaultDataPermissionStatementInterceptor(TablePermissionAutowireParser autowirePermissionParser, TablePermissionAnnotationParser annotationPermissionParser) {
 		this.autowirePermissionParser = autowirePermissionParser;
 		this.annotationPermissionParser = annotationPermissionParser;
 	}
@@ -60,7 +61,7 @@ public class DataPermissionStatementInterceptor extends AbstractDataPermissionIn
 						
 			// 获取对应的BoundSql，这个BoundSql其实跟我们利用StatementHandler获取到的BoundSql是同一个对象。
 			BoundSql boundSql = metaStatementHandler.getBoundSql();
-			MetaObject metaBoundSql = MetaObjectUtils.forObject(boundSql);
+			MetaObject metaBoundSql = SystemMetaObject.forObject(boundSql);
 			// 原始SQL
 			String originalSQL = (String) metaBoundSql.getValue("sql");
 			//提取被国际化注解标记的方法
@@ -74,8 +75,13 @@ public class DataPermissionStatementInterceptor extends AbstractDataPermissionIn
 				if(permissions.autowire()) {
 					originalSQL = autowirePermissionParser.parser(metaStatementHandler, originalSQL);
 				}
+				// 普通字符关联权限
 				else if(ArrayUtils.isNotEmpty(permissions.value())){
-					originalSQL = annotationPermissionParser.parser(metaStatementHandler, originalSQL, permissions);
+					originalSQL = annotationPermissionParser.parser(metaStatementHandler, originalSQL, permissions.value());
+				}
+				// 特殊表关联权限
+				else if(ArrayUtils.isNotEmpty(permissions.special())){
+					originalSQL = annotationPermissionParser.parser(metaStatementHandler, originalSQL, permissions.special());
 				}
 				// 将处理后的物理分页sql重新写入作为执行SQL
 				metaBoundSql.setValue("sql", originalSQL);
@@ -98,6 +104,19 @@ public class DataPermissionStatementInterceptor extends AbstractDataPermissionIn
 				// 将执行权交给下一个拦截器  
 				return invocation.proceed();
 			}
+
+			// 获取 @RequiresSpecialPermission 注解标记
+			RequiresSpecialPermission specialPermission = AnnotationUtils.findAnnotation(method, RequiresSpecialPermission.class);
+			if (specialPermission != null) {
+				originalSQL = annotationPermissionParser.parser(metaStatementHandler, originalSQL, specialPermission);
+				// 将处理后的物理分页sql重新写入作为执行SQL
+				metaBoundSql.setValue("sql", originalSQL);
+				if (LOG.isDebugEnabled()) {
+					LOG.debug(" Permissioned SQL : "+ statementHandler.getBoundSql().getSql());
+				}
+				// 将执行权交给下一个拦截器  
+				return invocation.proceed();
+			}
 			
 			// 获取接口类型
 			Class<?> mapperInterface = metaStatementHandler.getMapperInterface();
@@ -108,8 +127,13 @@ public class DataPermissionStatementInterceptor extends AbstractDataPermissionIn
 				if(permissions.autowire()) {
 					originalSQL = autowirePermissionParser.parser(metaStatementHandler, originalSQL);
 				}
+				// 普通字符关联权限
 				else if(ArrayUtils.isNotEmpty(permissions.value())){
-					originalSQL = annotationPermissionParser.parser(metaStatementHandler, originalSQL, permissions);
+					originalSQL = annotationPermissionParser.parser(metaStatementHandler, originalSQL, permissions.value());
+				}
+				// 特殊表关联权限
+				else if(ArrayUtils.isNotEmpty(permissions.special())){
+					originalSQL = annotationPermissionParser.parser(metaStatementHandler, originalSQL, permissions.special());
 				}
 				// 将处理后的物理分页sql重新写入作为执行SQL
 				metaBoundSql.setValue("sql", originalSQL);
@@ -119,6 +143,7 @@ public class DataPermissionStatementInterceptor extends AbstractDataPermissionIn
 				// 将执行权交给下一个拦截器  
 				return invocation.proceed();
 			}
+			 
 		}
 		// 将执行权交给下一个拦截器  
 		return invocation.proceed();

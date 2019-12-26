@@ -21,10 +21,6 @@ import org.apache.ibatis.plugin.meta.MetaStatementHandler;
 
 public interface ITablePermissionAutowireHandler {
 	
-	default boolean match(MetaStatementHandler metaObject, String tableName) {
-		return true;
-	}
-	
 	/**
      * 表名 SQL 处理
      *
@@ -33,7 +29,7 @@ public interface ITablePermissionAutowireHandler {
      * @param tableName  表名
      * @return
      */
-    default Optional<String> process(MetaStatementHandler metaHandler, String originalSQL, String tableName) {
+    default Optional<String> process(MetaStatementHandler metaHandler, String tableName) {
         String permissionedSQL = dynamicPermissionedSQL(metaHandler, tableName);
         if (null != permissionedSQL) {
 			return Optional.of(permissionedSQL);
