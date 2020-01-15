@@ -26,6 +26,7 @@ import org.apache.ibatis.plugin.AbstractInterceptorAdapter;
 import org.apache.ibatis.plugin.Invocation;
 import org.apache.ibatis.plugin.Plugin;
 import org.apache.ibatis.plugin.meta.MetaStatementHandler;
+import org.apache.mybatis.dbperms.annotation.NotRequiresPermission;
 import org.apache.mybatis.dbperms.annotation.RequiresPermission;
 import org.apache.mybatis.dbperms.annotation.RequiresPermissions;
 import org.apache.mybatis.dbperms.annotation.RequiresSpecialPermission;
@@ -49,7 +50,11 @@ public abstract class AbstractDataPermissionInterceptor extends AbstractIntercep
 		Method method = metaStatementHandler.getMethod(); 
 		// 获取接口类型
 		Class<?> mapperInterface = metaStatementHandler.getMapperInterface();
-		
+		// 无需数据权限控制
+		if(AnnotationUtils.findAnnotation(mapperInterface, NotRequiresPermission.class) != null || 
+			AnnotationUtils.findAnnotation(method, NotRequiresPermission.class) != null) {
+			return false;
+		}
 		//BeanMethodDefinitionFactory.getMethodDefinition(mappedStatement.getId(), paramObject != null ? new Class<?>[] {paramObject.getClass()} : null);
 		return  SqlCommandType.SELECT.equals(mappedStatement.getSqlCommandType()) && method != null &&
 				(AnnotationUtils.findAnnotation(mapperInterface, RequiresPermissions.class) != null || 
