@@ -20,6 +20,7 @@ import org.apache.ibatis.exception.MybatisException;
 
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
+import net.sf.jsqlparser.parser.Token;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.Select;
 
@@ -39,24 +40,37 @@ public static void main(String[] args) {
 				"        m.gzmc as xsmc, " + 
 				"        n.bjid, " + 
 				"        TO_CHAR(ROUND(decode(p.zrs, 0, 0, p.qdrs /p.zrs*100), 2),'fm9999999990.00')||'%' as qdl " + 
-				"        from GXXS_KQ_DMGZJLB m  " + 
-				"        inner join GXXS_KQ_DMGZB n on m.gzid = n.id " + 
-				"        inner join ( " + 
+				"        from GXXS_KQ_DMGZJLB m, " + 
+				"        	  GXXS_KQ_DMGZB n, " + 
+				"        	  ( " + 
 				"        	select count(t1.id) as zrs, " + 
 				"        	sum(case when dmzt=1 then 1 else 0 end) as qdrs, " + 
 				"        	t1.jsdmid " + 
 				"        	from GXXS_KQ_DMJLB t1 " + 
 				"        	group by t1.jsdmid " + 
-				"        ) p on p.jsdmid=m.id " + 
-				"        where m.sfzdy = '1' " + 
-				"        and m.jsid = ? " + 
-				"            AND (to_date(m.dmrq||' '||m.dmkssj||':00','yyyy-mm-dd hh24:mi:ss') " + 
+				"        ) p " + 
+				"        where m.gzid = n.id " + 
+				"		    AND p.jsdmid=m.id " +
+				"		    AND m.sfzdy = '1' " + 
+				"           AND m.jsid = ? " + 
+				"           AND (to_date(m.dmrq||' '||m.dmkssj||':00','yyyy-mm-dd hh24:mi:ss') " + 
 				"            BETWEEN to_date(?||':00','yyyy-mm-dd hh24:mi:ss') " + 
 				"            AND to_date(?||':59','yyyy-mm-dd hh24:mi:ss')) ";
 		
 		try {
 			
-            Statement statement = CCJSqlParserUtil.parse(sql);
+            Statement statement = CCJSqlParserUtil.parse(sql, (parser) -> {
+            
+            	try {
+            		
+					System.err.println(parser.getParseErrors());
+					
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+            	
+            });
+            
             if (null != statement && statement instanceof Select) { 
             	Select select = (Select) statement;
             	 
