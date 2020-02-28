@@ -51,7 +51,10 @@ public abstract class AbstractDataPermissionInterceptor extends AbstractIntercep
 		// 获取接口类型
 		Class<?> mapperInterface = metaStatementHandler.getMapperInterface();
 		// 无需数据权限控制
-		if(AnnotationUtils.findAnnotation(mapperInterface, NotRequiresPermission.class) != null || 
+		if( null == mapperInterface && null == method) {
+			return false;
+		}
+		if( AnnotationUtils.findAnnotation(mapperInterface, NotRequiresPermission.class) != null || 
 			AnnotationUtils.findAnnotation(method, NotRequiresPermission.class) != null) {
 			return false;
 		}
