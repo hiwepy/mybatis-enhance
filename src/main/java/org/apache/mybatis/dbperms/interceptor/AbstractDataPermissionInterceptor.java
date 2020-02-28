@@ -51,19 +51,26 @@ public abstract class AbstractDataPermissionInterceptor extends AbstractIntercep
 		// 获取接口类型
 		Class<?> mapperInterface = metaStatementHandler.getMapperInterface();
 		// 无需数据权限控制
-		if( null == mapperInterface && null == method) {
+		if( null != mapperInterface && AnnotationUtils.findAnnotation(mapperInterface, NotRequiresPermission.class) != null) {
 			return false;
 		}
-		if( AnnotationUtils.findAnnotation(mapperInterface, NotRequiresPermission.class) != null || 
-			AnnotationUtils.findAnnotation(method, NotRequiresPermission.class) != null) {
+		if( null != method &&  AnnotationUtils.findAnnotation(method, NotRequiresPermission.class) != null) {
 			return false;
+		}
+		// 需要数据权限控制
+		if (SqlCommandType.SELECT.equals(mappedStatement.getSqlCommandType())) {
+			if (null != mapperInterface
+					&& AnnotationUtils.findAnnotation(mapperInterface, RequiresPermissions.class) != null) {
+				return true;
+			}
+			if (null != method && (AnnotationUtils.findAnnotation(method, RequiresPermissions.class) != null
+					|| AnnotationUtils.findAnnotation(method, RequiresPermission.class) != null
+					|| AnnotationUtils.findAnnotation(method, RequiresSpecialPermission.class) != null)) {
+				return true;
+			}
 		}
 		//BeanMethodDefinitionFactory.getMethodDefinition(mappedStatement.getId(), paramObject != null ? new Class<?>[] {paramObject.getClass()} : null);
-		return  SqlCommandType.SELECT.equals(mappedStatement.getSqlCommandType()) && method != null &&
-				(AnnotationUtils.findAnnotation(mapperInterface, RequiresPermissions.class) != null || 
-				 AnnotationUtils.findAnnotation(method, RequiresPermissions.class) != null || 
-				 AnnotationUtils.findAnnotation(method, RequiresPermission.class) != null ||
-				 AnnotationUtils.findAnnotation(method, RequiresSpecialPermission.class) != null);
+		return false;
 	}
 	
 	protected boolean isIntercepted(CacheKey cacheKey) {
