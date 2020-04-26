@@ -31,10 +31,7 @@ public interface ITablePermissionAutowireHandler {
      */
     default Optional<String> process(MetaStatementHandler metaHandler, String tableName) {
         String permissionedSQL = dynamicPermissionedSQL(metaHandler, tableName);
-        if (null != permissionedSQL) {
-			return Optional.of(permissionedSQL);
-        }
-        return Optional.empty();
+        return Optional.ofNullable(permissionedSQL);
     }
 
     /**

@@ -17,6 +17,8 @@ package org.apache.mybatis.dbperms.interceptor;
 
 import java.lang.reflect.Method;
 import java.sql.Connection;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.ibatis.executor.statement.StatementHandler;
@@ -33,6 +35,7 @@ import org.apache.mybatis.dbperms.annotation.RequiresPermissions;
 import org.apache.mybatis.dbperms.annotation.RequiresSpecialPermission;
 import org.apache.mybatis.dbperms.parser.def.TablePermissionAnnotationParser;
 import org.apache.mybatis.dbperms.parser.def.TablePermissionAutowireParser;
+import org.apache.mybatis.dbperms.parser.def.TablePermissionScriptParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotationUtils;
@@ -43,12 +46,17 @@ import org.springframework.core.annotation.AnnotationUtils;
 public class DefaultDataPermissionStatementInterceptor extends AbstractDataPermissionInterceptor {
 
 	protected static Logger LOG = LoggerFactory.getLogger(DefaultDataPermissionStatementInterceptor.class);
+	protected final Pattern scriptPattern = Pattern.compile("(?:(?:\\{)(?:[^\\{\\}]*?)(?:\\}))+");
 	protected final TablePermissionAutowireParser autowirePermissionParser;
 	protected final TablePermissionAnnotationParser annotationPermissionParser;
+	protected final TablePermissionScriptParser scriptPermissionParser;
 	
-	public DefaultDataPermissionStatementInterceptor(TablePermissionAutowireParser autowirePermissionParser, TablePermissionAnnotationParser annotationPermissionParser) {
+	public DefaultDataPermissionStatementInterceptor(TablePermissionAutowireParser autowirePermissionParser,
+			TablePermissionAnnotationParser annotationPermissionParser, 
+			TablePermissionScriptParser scriptPermissionParser) {
 		this.autowirePermissionParser = autowirePermissionParser;
 		this.annotationPermissionParser = annotationPermissionParser;
+		this.scriptPermissionParser = scriptPermissionParser;
 	}
 	
 	@Override
@@ -64,7 +72,20 @@ public class DefaultDataPermissionStatementInterceptor extends AbstractDataPermi
 			MetaObject metaBoundSql = SystemMetaObject.forObject(boundSql);
 			// 原始SQL
 			String originalSQL = (String) metaBoundSql.getValue("sql");
-			//提取被国际化注解标记的方法
+			
+			// 匹配SQL中的数据权限规则函数
+			Matcher matcher = scriptPattern.matcher(originalSQL);
+			if (matcher.find()) {
+				// 对原始SQL进行数据范围限制条件的处理
+				originalSQL = scriptPermissionParser.parser(metaStatementHandler, originalSQL);
+            	//将处理后的SQL重新写入作为执行SQL
+	            metaBoundSql.setValue("sql", originalSQL);
+				if (LOG.isDebugEnabled()) {
+					LOG.debug(" Permissioned SQL : "+ statementHandler.getBoundSql().getSql());
+				}
+			}
+			
+			// 提取被数据权限注解标记的方法
 			Method method = metaStatementHandler.getMethod(); 
 			// Method method = BeanMethodDefinitionFactory.getMethodDefinition(mappedStatement.getId());
 			if(null != method) {

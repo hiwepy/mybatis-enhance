@@ -33,18 +33,12 @@ public interface ITablePermissionAnnotationHandler {
      */
     default Optional<String> process(MetaStatementHandler metaHandler, RequiresPermission permission) {
         String permissionedSQL = dynamicPermissionedSQL(metaHandler, permission);
-        if (null != permissionedSQL) {
-        	return Optional.of(permissionedSQL);
-        }
-        return Optional.empty();
+        return Optional.ofNullable(permissionedSQL);
     }
     
     default Optional<String> process(MetaStatementHandler metaHandler, RequiresSpecialPermission permission){
         String permissionedSQL = dynamicPermissionedSQL(metaHandler, permission);
-        if (null != permissionedSQL) {
-        	return Optional.of(permissionedSQL);
-        }
-        return Optional.empty();
+        return Optional.ofNullable(permissionedSQL);
     }
     
     

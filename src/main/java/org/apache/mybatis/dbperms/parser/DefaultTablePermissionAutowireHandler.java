@@ -66,7 +66,7 @@ public class DefaultTablePermissionAutowireHandler implements ITablePermissionAu
 				List<DataPermission> permissionsList = payload.getPermissions().stream()
 		    				.filter(permission -> StringUtils.equalsIgnoreCase(permission.getTable(), tableName))
 		    				.collect(Collectors.toList());
-		    	// 进行盘空
+		    	// 进行判空
 				if(CollectionUtils.isNotEmpty(permissionsList)) {
 					// 单条限制规则
 					if(permissionsList.size() == 1) {
