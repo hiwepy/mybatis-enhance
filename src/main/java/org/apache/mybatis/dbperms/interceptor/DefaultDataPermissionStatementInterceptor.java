@@ -49,7 +49,13 @@ public class DefaultDataPermissionStatementInterceptor extends AbstractDataPermi
 	protected final Pattern scriptPattern = Pattern.compile("(?:(?:\\{)(?:[^\\{\\}]*?)(?:\\}))+");
 	protected final TablePermissionAutowireParser autowirePermissionParser;
 	protected final TablePermissionAnnotationParser annotationPermissionParser;
-	protected final TablePermissionScriptParser scriptPermissionParser;
+	protected TablePermissionScriptParser scriptPermissionParser;
+	
+	public DefaultDataPermissionStatementInterceptor(TablePermissionAutowireParser autowirePermissionParser,
+			TablePermissionAnnotationParser annotationPermissionParser) {
+		this.autowirePermissionParser = autowirePermissionParser;
+		this.annotationPermissionParser = annotationPermissionParser;
+	}
 	
 	public DefaultDataPermissionStatementInterceptor(TablePermissionAutowireParser autowirePermissionParser,
 			TablePermissionAnnotationParser annotationPermissionParser, 
@@ -75,7 +81,7 @@ public class DefaultDataPermissionStatementInterceptor extends AbstractDataPermi
 			
 			// 匹配SQL中的数据权限规则函数
 			Matcher matcher = scriptPattern.matcher(originalSQL);
-			if (matcher.find()) {
+			if (null != scriptPermissionParser && matcher.find()) {
 				// 对原始SQL进行数据范围限制条件的处理
 				originalSQL = scriptPermissionParser.parser(metaStatementHandler, originalSQL);
             	//将处理后的SQL重新写入作为执行SQL
