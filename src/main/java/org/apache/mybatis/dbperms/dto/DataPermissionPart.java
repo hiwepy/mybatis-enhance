@@ -25,8 +25,29 @@ import lombok.ToString;
 public class DataPermissionPart {
 
 	/**
-	 * 受限表名称（实体表名称）
+	 * 1：匹配字段过滤时候查询的表（实体表名称）
 	 */
 	private String table;
+	/**
+	 * 2：匹配字段过滤时候查询的表的关联表
+	 */
+	private String related;
+	/**
+	 * 3：匹配的过滤字段
+	 */
+	private String match;
+	/**
+	 * 4：匹配字段过滤时候查询的表的条件字段名称
+	 */
+	private String table_field = "tableField";
+	/**
+	 * 5：数据范围对象的字段名称
+	 */
+	private String filter;
+	/**
+	 * 6：原查询SQL中与对应过滤查询表的过滤字段的字段名称[此参数在 in 的模式下可没有]
+	 */
+	private String mapper;
+	
 
 }

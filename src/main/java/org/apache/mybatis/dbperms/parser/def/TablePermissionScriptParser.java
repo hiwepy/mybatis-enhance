@@ -67,13 +67,13 @@ public class TablePermissionScriptParser implements ITablePermissionParser {
 			// 获取匹配的{}的内容
 			String fullSegment = matcher.group(0);
 			// {} 中间的内容
-			String segment = matcher.group(1);
+			String segmentSQL = matcher.group(1);
 			// 取得{}内容开始结束位置
 			int begain = originalSQL.indexOf(fullSegment);
 			int end = begain + fullSegment.length();
 			
 			// 处理权限脚本片段
-			Optional<String> optional = getTablePermissionHandler().process(metaHandler, segment);
+			Optional<String> optional = getTablePermissionHandler().process(metaHandler, segmentSQL);
 			// 如果有权限
 			if(optional.isPresent()) {
 				originalSQL = originalSQL.substring(0, begain) + optional.get() + originalSQL.substring(end);

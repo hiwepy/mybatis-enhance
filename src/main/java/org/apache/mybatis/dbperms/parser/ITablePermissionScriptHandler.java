@@ -28,8 +28,8 @@ public interface ITablePermissionScriptHandler {
 	 * @param originalSQL 当前执行 SQL
 	 * @return
 	 */
-	default Optional<String> process(MetaStatementHandler metaHandler, String sqlPart) {
-		String permissionedSQL = dynamicPermissionedSQL(metaHandler, sqlPart);
+	default Optional<String> process(MetaStatementHandler metaHandler, String segmentSQL) {
+		String permissionedSQL = dynamicPermissionedSQL(metaHandler, segmentSQL);
 		return Optional.ofNullable(permissionedSQL);
 	}
 
@@ -40,6 +40,6 @@ public interface ITablePermissionScriptHandler {
 	 * @param originalSQL 当前执行 SQL
 	 * @return String
 	 */
-	String dynamicPermissionedSQL(MetaStatementHandler metaHandler, String sqlPart);
+	String dynamicPermissionedSQL(MetaStatementHandler metaHandler, String segmentSQL);
 
 }
