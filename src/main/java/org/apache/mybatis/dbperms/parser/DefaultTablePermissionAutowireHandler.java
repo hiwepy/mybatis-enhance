@@ -61,61 +61,94 @@ public class DefaultTablePermissionAutowireHandler implements ITablePermissionAu
 			DataPermissionPayload payload = permissionPayload.get();
 			// 普通权限
 			if(CollectionUtils.isNotEmpty(payload.getPermissions())) {
-				
-				// 当前表对应的数据权限
-				List<DataPermission> permissionsList = payload.getPermissions().stream()
+				// 当前表对应的数据权限（可能有多列限制条件）
+				List<DataPermission> permissionsList = payload.getPermissions().parallelStream()
 		    				.filter(permission -> StringUtils.equalsIgnoreCase(permission.getTable(), tableName))
 		    				.collect(Collectors.toList());
+				// 单条限制规则
+				if(CollectionUtils.isNotEmpty(permissionsList) && permissionsList.size() == 1) {
+					DataPermission permission = permissionsList.get(0);
+					String trans = permission.getSql();
+					if (StringUtils.isNotBlank(trans)) {
+						Map<String, String> variables = new HashMap<String, String>();
+						// 数据对象表
+						variables.put("table", tableName);
+						// 字段限制值
+						for (DataPermissionColumn column : permission.getColumns()) {
+							if(!StringUtils.isNotBlank(column.getPerms())) {
+								continue;
+							}
+							// 字段对应的变量
+							String[] permsArr = StringUtils.split(column.getPerms(),",");
+							if(permsArr.length == 1) {
+								variables.put(StringUtils.lowerCase(column.getColumn()), permsArr[0]);
+							} else {
+								variables.put(StringUtils.lowerCase(column.getColumn()), Stream.of(permsArr)
+										.map(perm -> StringUtils.quote(perm)).collect(Collectors.joining(",")));
+							}
+						}
+						return PatternFormatUtils.format(trans, variables);
+					} 
+				}
+				
 		    	// 进行判空
 				if(CollectionUtils.isNotEmpty(permissionsList)) {
-					// 单条限制规则
-					if(permissionsList.size() == 1) {
-						DataPermission permission = permissionsList.get(0);
-						String trans = permission.getSql();
-						if (StringUtils.isNotBlank(trans)) {
-							Map<String, String> variables = new HashMap<String, String>();
-							// 数据对象表
-							variables.put("table", tableName);
-							// 字段限制值
-							for (DataPermissionColumn column : permission.getColumns()) {
-								if(!StringUtils.isNotBlank(column.getPerms())) {
-									continue;
-								}
-								// 字段对应的变量
-								String[] permsArr = StringUtils.split(column.getPerms(),",");
-								if(permsArr.length == 1) {
-									variables.put(StringUtils.lowerCase(column.getColumn()), permsArr[0]);
-								} else {
-									variables.put(StringUtils.lowerCase(column.getColumn()), Stream.of(permsArr)
-											.map(perm -> StringUtils.quote(perm)).collect(Collectors.joining(",")));
-								}
-							}
-							return PatternFormatUtils.format(trans, variables);
-						} 
-					}
-					
 					// 构建限制条件
-					List<String> allAolumnParts = new ArrayList<String>();
-					for (DataPermission permission : permissionsList) {
-						List<String> columnParts = this.columnParts(alias, permission);
-						if (CollectionUtils.isNotEmpty(columnParts)) {
-							// 添加每列的限制条件
-							allAolumnParts.add(StringUtils.join(columnParts, permission.getRelation().getOperator()));
+					List<String> conditionParts = new ArrayList<>();
+					// 筛选出OR条件关联的筛选语句
+					List<DataPermission> orPermissionsList = permissionsList.parallelStream()
+						.filter(permission -> permission.getGroupRelation().compareTo(Relational.OR) == 0 )
+	    				.collect(Collectors.toList());
+					if(CollectionUtils.isNotEmpty(orPermissionsList)) {
+						// 构建限制条件
+						List<String> orConditionParts = new ArrayList<>();
+						// 循环数据权限组
+						for (DataPermission permission : orPermissionsList) {
+							// 构造当前数据权限组内不同列的限制SQL
+							List<String> columnParts = this.columnParts(alias, permission);
+							if (CollectionUtils.isNotEmpty(columnParts)) {
+								// 添加每列的限制条件
+								if(columnParts.size() > 1) {
+									orConditionParts.add(" ( " + StringUtils.join(columnParts, permission.getRelation().getOperator()) + " ) " );
+								} else {
+									orConditionParts.add(columnParts.get(0));
+								}
+							}		
+						}
+						if(CollectionUtils.isNotEmpty(orConditionParts)) {
+							conditionParts.add(" ( " + orConditionParts.stream().collect(Collectors.joining(Relational.OR.getOperator())) + " ) ");
 						}
 					}
-					if (CollectionUtils.isNotEmpty(allAolumnParts)) {
+					
+					// 筛选出AND条件关联的筛选语句
+					List<DataPermission> andPermissionsList = permissionsList.parallelStream()
+						.filter(permission -> permission.getGroupRelation().compareTo(Relational.AND) == 0 )
+	    				.collect(Collectors.toList());
+					if(CollectionUtils.isNotEmpty(andPermissionsList)) {
+						// 循环数据权限组
+						for (DataPermission permission : andPermissionsList) {
+							// 构造当前数据权限组内不同列的限制SQL
+							List<String> columnParts = this.columnParts(alias, permission);
+							if (CollectionUtils.isNotEmpty(columnParts)) {
+								// 添加每列的限制条件
+								if(columnParts.size() > 1) {
+									conditionParts.add(" ( " + StringUtils.join(columnParts, permission.getRelation().getOperator()) + " ) " );
+								} else {
+									conditionParts.add(columnParts.get(0));
+								}
+							}		
+						}
+						
+					}
+					
+					if (CollectionUtils.isNotEmpty(conditionParts)) {
 						StringBuilder builder = new StringBuilder();
 						builder.append("(");
 						builder.append("  SELECT ").append(alias).append(".* ");
 						builder.append("  FROM ").append(tableName).append(" ").append(alias);
-						
 						builder.append(" WHERE ");
-						if(allAolumnParts.size() > 1) {
-							builder.append(allAolumnParts.stream().map(part -> " ( " + part + " ) ").collect(Collectors.joining(Relational.OR.getOperator())));
-						} else {
-							builder.append(allAolumnParts.get(0));
-						}
-						builder.append(")");
+						builder.append(conditionParts.stream().collect(Collectors.joining(Relational.AND.getOperator())));
+						builder.append(" ) ");
 						return builder.toString();
 					}
 					
