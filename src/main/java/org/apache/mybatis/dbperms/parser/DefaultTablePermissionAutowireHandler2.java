@@ -17,26 +17,23 @@ package org.apache.mybatis.dbperms.parser;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.commons.collections.MapUtils;
 import org.apache.ibatis.plugin.meta.MetaStatementHandler;
 import org.apache.ibatis.utils.CollectionUtils;
 import org.apache.mybatis.dbperms.annotation.Relational;
 import org.apache.mybatis.dbperms.dto.DataPermission;
 import org.apache.mybatis.dbperms.dto.DataPermissionColumn;
-import org.apache.mybatis.dbperms.dto.DataPermissionForeign;
 import org.apache.mybatis.dbperms.dto.DataPermissionPayload;
 import org.apache.mybatis.dbperms.dto.DataSpecialPermission;
 import org.apache.mybatis.dbperms.utils.PatternFormatUtils;
 import org.apache.mybatis.dbperms.utils.RandomString;
+import org.apache.mybatis.dbperms.utils.SqlBuildUtils;
 import org.apache.mybatis.dbperms.utils.StringUtils;
 
 /**
@@ -97,7 +94,7 @@ public class DefaultTablePermissionAutowireHandler2 implements ITablePermissionA
 		    	// 进行判空
 				if(CollectionUtils.isNotEmpty(permissionsList)) {
 					// 构建限制条件
-					Map<Relational, String> conditionParts = new LinkedHashMap<>();
+					List<String> conditionParts = new ArrayList<>();
 					// 筛选出OR条件关联的筛选语句
 					List<DataPermission> orPermissionsList = permissionsList.parallelStream()
 						.filter(permission -> permission.getGroupRelation().compareTo(Relational.OR) == 0 )
@@ -108,7 +105,7 @@ public class DefaultTablePermissionAutowireHandler2 implements ITablePermissionA
 						// 循环数据权限组
 						for (DataPermission permission : orPermissionsList) {
 							// 构造当前数据权限组内不同列的限制SQL
-							List<String> columnParts = this.columnParts(alias, permission);
+							List<String> columnParts = SqlBuildUtils.columnParts(alias, permission);
 							if (CollectionUtils.isNotEmpty(columnParts)) {
 								// 添加每列的限制条件
 								if(columnParts.size() > 1) {
@@ -119,7 +116,7 @@ public class DefaultTablePermissionAutowireHandler2 implements ITablePermissionA
 							}		
 						}
 						if(CollectionUtils.isNotEmpty(orConditionParts)) {
-							conditionParts.put(Relational.OR, " ( " + orConditionParts.stream().collect(Collectors.joining(Relational.OR.getOperator())) + " ) ");
+							conditionParts.add(" ( " + orConditionParts.stream().collect(Collectors.joining(Relational.OR.getOperator())) + " ) ");
 						}
 					}
 					
@@ -131,41 +128,26 @@ public class DefaultTablePermissionAutowireHandler2 implements ITablePermissionA
 						// 循环数据权限组
 						for (DataPermission permission : andPermissionsList) {
 							// 构造当前数据权限组内不同列的限制SQL
-							List<String> columnParts = this.columnParts(alias, permission);
+							List<String> columnParts = SqlBuildUtils.columnParts(alias, permission);
 							if (CollectionUtils.isNotEmpty(columnParts)) {
 								// 添加每列的限制条件
 								if(columnParts.size() > 1) {
-									conditionParts.put(Relational.AND, " ( " + StringUtils.join(columnParts, permission.getRelation().getOperator()) + " ) " );
+									conditionParts.add(" ( " + StringUtils.join(columnParts, permission.getRelation().getOperator()) + " ) " );
 								} else {
-									conditionParts.put(Relational.AND, columnParts.get(0));
+									conditionParts.add(columnParts.get(0));
 								}
 							}		
 						}
+						
 					}
 					
-					if (MapUtils.isNotEmpty(conditionParts)) {
-						
+					if (CollectionUtils.isNotEmpty(conditionParts)) {
 						StringBuilder builder = new StringBuilder();
 						builder.append("(");
 						builder.append("  SELECT ").append(alias).append(".* ");
 						builder.append("  FROM ").append(tableName).append(" ").append(alias);
 						builder.append(" WHERE ");
-						if(conditionParts.size() > 1) {
-							boolean isFirst = true;
-							for (Entry<Relational, String> permission : conditionParts.entrySet()) {
-								if(isFirst) {
-									builder.append(permission.getValue());
-									isFirst = false;
-								} else {
-									builder.append(permission.getKey().getOperator()).append(permission.getValue());
-								}
-							}
-						} else {
-							for (Entry<Relational, String> permission : conditionParts.entrySet()) {
-								builder.append(permission.getValue());
-								break;
-							}
-						}
+						builder.append(conditionParts.stream().collect(Collectors.joining(Relational.AND.getOperator())));
 						builder.append(" ) ");
 						return builder.toString();
 					}
@@ -194,125 +176,6 @@ public class DefaultTablePermissionAutowireHandler2 implements ITablePermissionA
 		return null;
 	}
 	
-	List<String> columnParts(String alias, DataPermission permission){
-		// 构建数据限制条件SQL
-		List<String> columnParts = new ArrayList<String>();
-		for (DataPermissionColumn column : permission.getColumns()) {
-			if(null == column.getPerms()) {
-				continue;
-			}
-			// 数据权限值数组
-			String[] permsArr = StringUtils.split(column.getPerms(),",");
-			switch (column.getCondition()) {
-				case GT:
-				case GTE:
-				case LT:
-				case LTE:
-				case EQ:
-				case NE:
-				case LIKE:
-				case LIKE_LEFT:
-				case LIKE_RIGHT:{
-					if(permsArr.length == 1) {
-						columnParts.add(String.format(column.getCondition().getOperator(), alias, column.getColumn(), StringUtils.quote(permsArr[0])));
-					} else {	
-						StringBuilder partSQL = new StringBuilder();
-						partSQL.append(" ( ");
-						partSQL.append(Stream.of(StringUtils.split(column.getPerms(),","))
-								.map(perm -> String.format(column.getCondition().getOperator(), alias, column.getColumn(), StringUtils.quote(perm))).collect(Collectors.joining(" OR ")));
-						partSQL.append(" ) ");
-						columnParts.add(partSQL.toString());
-					}
-				};break;
-				case IN:{
-					if(permsArr.length == 1) {
-						columnParts.add(String.format(column.getCondition().getOperator(), alias, column.getColumn(), StringUtils.quote(permsArr[0])));
-					} else {
-						String inPart = Stream.of(StringUtils.split(column.getPerms(),","))
-								.map(perm -> StringUtils.quote(perm)).collect(Collectors.joining(","));
-						columnParts.add(String.format(column.getCondition().getOperator(), alias, column.getColumn(), inPart));
-					}
-				};break;
-				case BITAND_GT:
-				case BITAND_GTE:
-				case BITAND_LT:
-				case BITAND_LTE:
-				case BITAND_EQ:{
-					if(permsArr.length == 1) {
-						columnParts.add(String.format(column.getCondition().getOperator(), Integer.parseInt(permsArr[0]), alias, column.getColumn()));
-					} else {
-						StringBuilder partSQL = new StringBuilder();
-						partSQL.append(" ( ");
-						partSQL.append(Stream.of(StringUtils.split(column.getPerms(),","))
-								.map(perm -> String.format(column.getCondition().getOperator(), Integer.parseInt(perm), alias, column.getColumn())).collect(Collectors.joining(" OR ")));
-						partSQL.append(" ) ");
-						columnParts.add(partSQL.toString());
-					}
-				};break;
-				case EXISTS:
-				case NOT_EXISTS:{
-					DataPermissionForeign foreign = column.getForeign();
-					if(null != foreign){
-						StringBuilder partSQL = new StringBuilder();
-						// 开始构建关联SQL
-						partSQL.append(" SELECT ").append(" fkt.").append(foreign.getColumn());
-						partSQL.append(" FROM ").append(foreign.getTable()).append(" fkt ");
-						partSQL.append(" WHERE ").append(" fkt.").append(foreign.getColumn()).append(" = ").append(alias).append(column.getColumn());
-						// 构建两个表关联关系条件SQL
-						switch (foreign.getCondition()) {
-						case GT:
-						case GTE:
-						case LT:
-						case LTE:
-						case EQ:
-						case NE:
-						case LIKE:
-						case LIKE_LEFT:
-						case LIKE_RIGHT:{
-							if(permsArr.length == 1) {
-								partSQL.append(" AND ").append(String.format(foreign.getCondition().getOperator(), "fkt", foreign.getColumn(), StringUtils.quote(permsArr[0])));
-							} else {	
-								partSQL.append(" AND ( ");
-								partSQL.append(Stream.of(permsArr)
-										.map(perm -> String.format(foreign.getCondition().getOperator(), "fkt", foreign.getColumn(), StringUtils.quote(perm)))
-										.collect(Collectors.joining(" OR ")));
-								partSQL.append(" ) ");
-							}
-						};break;
-						case IN:{
-							if(permsArr.length == 1) {
-								partSQL.append(" AND ").append(String.format(foreign.getCondition().getOperator(), "fkt", foreign.getColumn(), StringUtils.quote(permsArr[0])));
-							} else {	
-								String inPart = Stream.of(permsArr)
-										.map(perm -> StringUtils.quote(perm)).collect(Collectors.joining(","));
-								partSQL.append(" AND ").append(String.format(foreign.getCondition().getOperator(), "fkt", foreign.getColumn(), inPart));
-							}
-						};break;
-						case BITAND_GT:
-						case BITAND_GTE:
-						case BITAND_LT:
-						case BITAND_LTE:
-						case BITAND_EQ:{
-							if(permsArr.length == 1) {
-								partSQL.append(" AND ").append(String.format(foreign.getCondition().getOperator(), Integer.parseInt(permsArr[0]), "fkt", foreign.getColumn()));
-							} else {	
-								partSQL.append(" AND ( ");
-								partSQL.append(Stream.of(permsArr)
-										.map(perm -> String.format(foreign.getCondition().getOperator(), Integer.parseInt(perm), "fkt", foreign.getColumn()))
-										.collect(Collectors.joining(" OR ")));
-								partSQL.append(" ) ");
-							}
-						};break;
-						default:{};break;
-						}
-						columnParts.add(String.format(column.getCondition().getOperator(), partSQL.toString()));
-					}
-				};break;
-				default:{};break;
-			}
-		}
-		return columnParts;
-	}
 
 	public BiFunction<MetaStatementHandler, String, Optional<DataPermissionPayload>> getPermissionsProvider() {
 		return permissionsProvider;
