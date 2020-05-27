@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -78,15 +79,15 @@ public class SqlBuildUtils {
 			}
 			if(CollectionUtils.isNotEmpty(orConditionParts)) {
 				if(orConditionParts.size() > 1) {
-					conditionPartMap.put(Relational.OR, " ( " + orConditionParts.stream().collect(Collectors.joining(Relational.OR.getOperator())) + " ) ");	
+					conditionPartMap.put(Relational.OR, " ( " + orConditionParts.stream().filter(item -> !Objects.isNull(item)).collect(Collectors.joining(Relational.OR.getOperator())) + " ) ");	
 				} else {
 					conditionPartMap.put(Relational.OR, orConditionParts.get(0));
 				}
 			}
 		}
 		
-		StringBuilder builder = new StringBuilder();
 		if(conditionPartMap.size() > 1) {
+			StringBuilder builder = new StringBuilder();
 			builder.append(" ( ");
 			boolean isFirst = true;
 			for (Entry<Relational, String> permission : conditionPartMap.entrySet()) {
@@ -98,15 +99,13 @@ public class SqlBuildUtils {
 				}
 			}
 			builder.append(" ) ");
+			return builder.toString();
 		} else {
 			for (Entry<Relational, String> permission : conditionPartMap.entrySet()) {
-				builder.append(permission.getValue());
-				break;
+				return permission.getValue();
 			}
 		}
-		
-		return builder.toString();
-		
+		return null;
 	}
 	
 	public static String conditionSpecialParts(String alias, List<DataSpecialPermission> permissionsList){
@@ -156,15 +155,15 @@ public class SqlBuildUtils {
 			}
 			if(CollectionUtils.isNotEmpty(orConditionParts)) {
 				if(orConditionParts.size() > 1) {
-					conditionPartMap.put(Relational.OR, " ( " + orConditionParts.stream().collect(Collectors.joining(Relational.OR.getOperator())) + " ) ");
+					conditionPartMap.put(Relational.OR, " ( " + orConditionParts.stream().filter(item -> !Objects.isNull(item)).collect(Collectors.joining(Relational.OR.getOperator())) + " ) ");
 				} else {
 					conditionPartMap.put(Relational.OR, orConditionParts.get(0));
 				}
 			}
 		}
 		
-		StringBuilder builder = new StringBuilder();
 		if(conditionPartMap.size() > 1) {
+			StringBuilder builder = new StringBuilder();
 			builder.append(" ( ");
 			boolean isFirst = true;
 			for (Entry<Relational, String> permission : conditionPartMap.entrySet()) {
@@ -176,15 +175,13 @@ public class SqlBuildUtils {
 				}
 			}
 			builder.append(" ) ");
+			return builder.toString();
 		} else {
 			for (Entry<Relational, String> permission : conditionPartMap.entrySet()) {
-				builder.append(permission.getValue());
-				break;
+				return permission.getValue();
 			}
 		}
-		
-		return builder.toString();
-		
+		return null;
 	}
 
 	public static List<String> columnParts(String alias, DataPermission permission){

@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.regex.Pattern;
@@ -137,7 +138,7 @@ public class DefaultTablePermissionAutowireHandler implements ITablePermissionAu
 				builder.append("  SELECT ").append(alias).append(".* ");
 				builder.append("  FROM ").append(tableName).append(" ").append(alias);
 				builder.append(" WHERE ");
-				builder.append(conditionParts.stream().collect(Collectors.joining(payload.getRelation().getOperator())));
+				builder.append(conditionParts.stream().filter(item -> !Objects.isNull(item)).collect(Collectors.joining(payload.getRelation().getOperator())));
 				builder.append(" ) ");
 				return builder.toString();
 			}
