@@ -77,7 +77,11 @@ public class SqlBuildUtils {
 				}		
 			}
 			if(CollectionUtils.isNotEmpty(orConditionParts)) {
-				conditionPartMap.put(Relational.OR, " ( " + orConditionParts.stream().collect(Collectors.joining(Relational.OR.getOperator())) + " ) ");
+				if(orConditionParts.size() > 1) {
+					conditionPartMap.put(Relational.OR, " ( " + orConditionParts.stream().collect(Collectors.joining(Relational.OR.getOperator())) + " ) ");	
+				} else {
+					conditionPartMap.put(Relational.OR, orConditionParts.get(0));
+				}
 			}
 		}
 		
@@ -151,7 +155,11 @@ public class SqlBuildUtils {
 				}		
 			}
 			if(CollectionUtils.isNotEmpty(orConditionParts)) {
-				conditionPartMap.put(Relational.OR, " ( " + orConditionParts.stream().collect(Collectors.joining(Relational.OR.getOperator())) + " ) ");
+				if(orConditionParts.size() > 1) {
+					conditionPartMap.put(Relational.OR, " ( " + orConditionParts.stream().collect(Collectors.joining(Relational.OR.getOperator())) + " ) ");
+				} else {
+					conditionPartMap.put(Relational.OR, orConditionParts.get(0));
+				}
 			}
 		}
 		
