@@ -131,6 +131,7 @@ public class DefaultTablePermissionAutowireHandler implements ITablePermissionAu
 				conditionParts.add(SqlBuildUtils.conditionSpecialParts(alias, permissionsList));
 			}
 			
+			conditionParts = conditionParts.parallelStream().filter(item -> !Objects.isNull(item)).collect(Collectors.toList());
 			if (CollectionUtils.isNotEmpty(conditionParts)) {
 				
 				StringBuilder builder = new StringBuilder();
@@ -138,7 +139,7 @@ public class DefaultTablePermissionAutowireHandler implements ITablePermissionAu
 				builder.append("  SELECT ").append(alias).append(".* ");
 				builder.append("  FROM ").append(tableName).append(" ").append(alias);
 				builder.append(" WHERE ");
-				builder.append(conditionParts.stream().filter(item -> !Objects.isNull(item)).collect(Collectors.joining(payload.getRelation().getOperator())));
+				builder.append(conditionParts.stream().collect(Collectors.joining(payload.getRelation().getOperator())));
 				builder.append(" ) ");
 				return builder.toString();
 			}
