@@ -108,27 +108,30 @@ public class DefaultTablePermissionAutowireHandler implements ITablePermissionAu
 				
 				// 查找匹配的特殊权限（可能有多列限制条件）
 	        	List<DataSpecialPermission> permissionsList = payload.getSpecialPermissions().stream()
-						.filter(permission -> StringUtils.equalsIgnoreCase(permission.getTable(), tableName))
+						.filter(permission -> StringUtils.equalsIgnoreCase(permission.getTable(), tableName) && CollectionUtils.isNotEmpty(permission.getColumns()))
 						.collect(Collectors.toList());
 	        	
 	        	// 进行判空
-				if(CollectionUtils.isEmpty(permissionsList)) {
-					return null;
-				}
-				
-	        	// 单个限制规则（优先处理SQL替换类型）
-				if(permissionsList.size() == 1) {
-					DataSpecialPermission permission = permissionsList.get(0);
-					if (StringUtils.isNotBlank(permission.getSql()) && pattern_find.matcher(permission.getSql()).find()) {
+				if(CollectionUtils.isNotEmpty(permissionsList)) {
+					
+					conditionParts.add(SqlBuildUtils.conditionSpecialParts(alias, permissionsList));
+					
+				} else {
+					
+					Optional<DataSpecialPermission> permissionsSpecial = payload.getSpecialPermissions().stream()
+							.filter(permission -> StringUtils.equalsIgnoreCase(permission.getTable(), tableName) && StringUtils.containsIgnoreCase(permission.getSql(), "SELECT"))
+							.findFirst();
+					// 单个限制规则（优先处理SQL替换类型）
+					if(permissionsSpecial.isPresent()) {
+						DataSpecialPermission permission = permissionsSpecial.get();
 						Map<String, String> variables = new HashMap<String, String>();
 		    			// 数据对象表
 		    			variables.put("table", permission.getTable());
 		    			return PatternFormatUtils.format(permission.getSql(), variables);
 					}
+					
 				}
 				
-	            // 特殊权限SQL
-				conditionParts.add(SqlBuildUtils.conditionSpecialParts(alias, permissionsList));
 			}
 			
 			conditionParts = conditionParts.parallelStream().filter(item -> !Objects.isNull(item)).collect(Collectors.toList());
