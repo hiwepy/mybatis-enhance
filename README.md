@@ -11,6 +11,6 @@ MyBatis 增强扩展 ： 实现基于注解的数据权限组件 .
 <dependency>
 	<groupId>com.github.hiwepy</groupId>
 	<artifactId>mybatis-dbperms</artifactId>
-	<version>${project.version}</version>
+	<version>1.0.0.RELEASE</version>
 </dependency>
 ```
