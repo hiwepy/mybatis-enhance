@@ -398,7 +398,7 @@
 		<maven-source-plugin.version>3.0.1</maven-source-plugin.version>
 		<maven-nexus-staging-plugin.version>1.6.8</maven-nexus-staging-plugin.version>
 		<mybatis.version>3.5.3</mybatis.version>
-		<mybatis-biz.version>1.0.0-SNAPSHOT</mybatis-biz.version>
+		<mybatis-biz.version>1.0.0.RELEASE</mybatis-biz.version>
 		<mybatis-spring.version>2.0.3</mybatis-spring.version>
 		<mybatis-plus.version>3.3.0</mybatis-plus.version>
 	</properties>
