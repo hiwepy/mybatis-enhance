@@ -194,7 +194,7 @@ public class SelectAnnotationPermissionParser extends StatementVisitorAdapter
         }
     }
 
-    /**
+    /*
      * Override to adapt the tableName generation (e.g. with / without schema).
      *
      * @param table

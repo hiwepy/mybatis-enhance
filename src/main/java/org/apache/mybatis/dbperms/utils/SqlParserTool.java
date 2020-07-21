@@ -48,14 +48,14 @@ import net.sf.jsqlparser.statement.update.Update;
 import net.sf.jsqlparser.statement.upsert.Upsert;
 import net.sf.jsqlparser.util.TablesNamesFinder;
  
-/**
+/*
  * jsqlparser解析SQL工具类
  * PlainSelect类不支持union、union all等请使用SetOperationList接口
  *
  */
 public class SqlParserTool {
  
-    /**
+    /*
      * 由于jsqlparser没有获取SQL类型的原始工具，并且在下面操作时需要知道SQL类型，所以编写此工具方法
      * @param sql sql语句
      * @return sql类型，
@@ -96,7 +96,7 @@ public class SqlParserTool {
         }
     }
  
-    /**
+    /*
      * 获取sql操作接口,与上面类型判断结合使用
      * example:
      * String sql = "create table a(a string)";
@@ -113,7 +113,7 @@ public class SqlParserTool {
         return sqlStmt;
     }
  
-    /**
+    /*
      * 获取tables的表名
      * @param statement
      * @return
@@ -124,7 +124,7 @@ public class SqlParserTool {
         return tableList;
     }
  
-    /**
+    /*
      * 获取join层级
      * @param selectBody
      * @return
@@ -137,7 +137,7 @@ public class SqlParserTool {
         return new ArrayList<Join>();
     }
  
-    /**
+    /*
      *
      * @param selectBody
      * @return
@@ -150,7 +150,7 @@ public class SqlParserTool {
         return new ArrayList<Table>();
     }
  
-    /**
+    /*
      *
      * @param selectBody
      * @return
@@ -161,7 +161,7 @@ public class SqlParserTool {
         }
     }
  
-    /**
+    /*
      * 获取limit值
      * @param selectBody
      * @return
@@ -174,7 +174,7 @@ public class SqlParserTool {
         return null;
     }
  
-    /**
+    /*
      * 为SQL增加limit值
      * @param selectBody
      * @param l
@@ -187,7 +187,7 @@ public class SqlParserTool {
         }
     }
  
-    /**
+    /*
      * 获取FromItem不支持子查询操作
      * @param selectBody
      * @return
@@ -202,7 +202,7 @@ public class SqlParserTool {
         return null;
     }
  
-    /**
+    /*
      * 获取子查询
      * @param selectBody
      * @return
@@ -219,7 +219,7 @@ public class SqlParserTool {
         return null;
     }
  
-    /**
+    /*
      * 判断是否为多级子查询
      * @param selectBody
      * @return
@@ -240,7 +240,7 @@ public class SqlParserTool {
         return false;
     }
  
-    /**
+    /*
      * 获取查询字段
      * @param selectBody
      * @return

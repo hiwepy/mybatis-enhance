@@ -3,22 +3,22 @@ package org.apache.mybatis.dbperms.utils;
 
 import java.util.Random;
 
-/**
+/*
  * A provider of randomized {@link java.lang.String} values.
  */
 public class RandomString {
 
-    /**
+    /*
      * The default length of a randomized {@link java.lang.String}.
      */
     public static final int DEFAULT_LENGTH = 8;
 
-    /**
+    /*
      * The symbols which are used to create a random {@link java.lang.String}.
      */
     private static final char[] SYMBOL;
 
-    /**
+    /*
      * The amount of bits to extract out of an integer for each key generated.
      */
     private static final int KEY_BITS;
@@ -42,17 +42,17 @@ public class RandomString {
         KEY_BITS = bits - (Integer.bitCount(SYMBOL.length) == bits ? 0 : 1);
     }
 
-    /**
+    /*
      * A provider of random values.
      */
     private final Random random;
 
-    /**
+    /*
      * The length of the random strings that are created by this instance.
      */
     private final int length;
 
-    /**
+    /*
      * Creates a random {@link java.lang.String} provider where each {@link java.lang.String} is of
      * {@link net.bytebuddy.utility.RandomString#DEFAULT_LENGTH} length.
      */
@@ -60,7 +60,7 @@ public class RandomString {
         this(DEFAULT_LENGTH);
     }
 
-    /**
+    /*
      * Creates a random {@link java.lang.String} provider where each value is of the given length.
      *
      * @param length The length of the random {@link String}.
@@ -73,7 +73,7 @@ public class RandomString {
         random = new Random();
     }
 
-    /**
+    /*
      * Creates a random {@link java.lang.String} of {@link net.bytebuddy.utility.RandomString#DEFAULT_LENGTH} length.
      *
      * @return A random {@link java.lang.String}.
@@ -82,7 +82,7 @@ public class RandomString {
         return make(DEFAULT_LENGTH);
     }
 
-    /**
+    /*
      * Creates a random {@link java.lang.String} of the given {@code length}.
      *
      * @param length The length of the random {@link String}.
@@ -92,7 +92,7 @@ public class RandomString {
         return new RandomString(length).nextString();
     }
 
-    /**
+    /*
      * Represents an integer value as a string hash. This string is not technically random but generates a fixed character
      * sequence based on the hash provided.
      *
@@ -107,7 +107,7 @@ public class RandomString {
         return new String(buffer);
     }
 
-    /**
+    /*
      * Creates a new random {@link java.lang.String}.
      *
      * @return A random {@link java.lang.String} of the given length for this instance.

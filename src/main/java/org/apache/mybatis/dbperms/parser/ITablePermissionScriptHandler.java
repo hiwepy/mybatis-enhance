@@ -21,7 +21,7 @@ import org.apache.ibatis.plugin.meta.MetaStatementHandler;
 
 public interface ITablePermissionScriptHandler {
 
-	/**
+	/*
 	 *  SQL 处理
 	 *
 	 * @param metaHandler 元对象
@@ -33,7 +33,7 @@ public interface ITablePermissionScriptHandler {
 		return Optional.ofNullable(permissionedSQL);
 	}
 
-	/**
+	/*
 	 * 生成动态SQL，无改变返回 NULL
 	 *
 	 * @param metaHandler 元对象

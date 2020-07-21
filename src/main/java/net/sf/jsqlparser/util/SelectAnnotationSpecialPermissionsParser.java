@@ -196,7 +196,7 @@ public class SelectAnnotationSpecialPermissionsParser extends StatementVisitorAd
         }
     }
 
-    /**
+    /*
      * Override to adapt the tableName generation (e.g. with / without schema).
      *
      * @param table

@@ -36,7 +36,7 @@ public class TablePermissionAutowireParser implements ITablePermissionParser {
 
 	private volatile boolean initialized = false;
 
-    /**
+    /*
      * Initialize the object.
      */
     public void init() {
@@ -50,7 +50,7 @@ public class TablePermissionAutowireParser implements ITablePermissionParser {
         }
     }
 
-    /**
+    /*
      * Internal initialization of the object.
      */
     protected void internalInit() {};

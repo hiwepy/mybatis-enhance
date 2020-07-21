@@ -22,7 +22,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/**
+/*
  * 该注解用于方法，字段；指明字段
  */
 @Documented
@@ -31,15 +31,15 @@ import java.lang.annotation.Target;
 @Target({ElementType.METHOD})
 public @interface RequiresSpecialPermission {
 
-	/**
+	/*
 	 *受限表名称（实体表名称）
 	 */
 	public abstract String table();
-	/**
+	/*
 	 *受限表转换后的SQL(直接使用SQL进行替换，减少性能消耗)
 	 */
 	public abstract String sql() default "";
-	/**
+	/*
 	 * 受限表字段限制条件：
 	 */
 	public abstract String perms();

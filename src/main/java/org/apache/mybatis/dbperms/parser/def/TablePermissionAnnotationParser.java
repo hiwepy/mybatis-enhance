@@ -38,7 +38,7 @@ public class TablePermissionAnnotationParser implements ITablePermissionParser {
 	
 	private volatile boolean initialized = false;
 
-    /**
+    /*
      * Initialize the object.
      */
     public void init() {
@@ -52,7 +52,7 @@ public class TablePermissionAnnotationParser implements ITablePermissionParser {
         }
     }
 
-    /**
+    /*
      * Internal initialization of the object.
      */
     protected void internalInit() {};

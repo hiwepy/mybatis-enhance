@@ -34,7 +34,7 @@ public class TablePermissionScriptParser implements ITablePermissionParser {
 	private ITablePermissionScriptHandler tablePermissionHandler;
 	private volatile boolean initialized = false;
 
-    /**
+    /*
      * Initialize the object.
      */
     public void init() {
@@ -48,7 +48,7 @@ public class TablePermissionScriptParser implements ITablePermissionParser {
         }
     }
 
-    /**
+    /*
      * Internal initialization of the object.
      */
     protected void internalInit() {};

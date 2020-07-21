@@ -26,18 +26,18 @@ import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.LongValue;
 import net.sf.jsqlparser.expression.NullValue;
 
-/**
+/*
  * 多租户拦截 : https://cloud.tencent.com/developer/article/1494339
  * 租户处理器 -主要实现 mybatis-plus https://mp.baomidou.com/guide/tenant.html
  */
 @Slf4j
 public class PreTenantHandler implements TenantHandler {
 
-    /**
+    /*
      * 多租户标识
      */
     private static final String SYSTEM_TENANT_ID = "tenant_id";
-    /**
+    /*
      * 需要过滤的表
      */
     private static final List<String> IGNORE_TENANT_TABLES = new ArrayList<>();
@@ -48,7 +48,7 @@ public class PreTenantHandler implements TenantHandler {
     	this.context = context;
     }
     
-    /**
+    /*
      * 租户Id
      *
      * @return
@@ -64,7 +64,7 @@ public class PreTenantHandler implements TenantHandler {
         return new LongValue(tenantId);
     }
 
-    /**
+    /*
      * 租户字段名
      *
      * @return
@@ -74,7 +74,7 @@ public class PreTenantHandler implements TenantHandler {
         return SYSTEM_TENANT_ID;
     }
 
-    /**
+    /*
      * 根据表名判断是否进行过滤
      * 忽略掉一些表：如租户表（sys_tenant）本身不需要执行这样的处理
      *

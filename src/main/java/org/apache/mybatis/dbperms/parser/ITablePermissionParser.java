@@ -19,7 +19,7 @@ import org.apache.ibatis.plugin.meta.MetaStatementHandler;
 
 public interface ITablePermissionParser {
 
-	 /**
+	/*
      * <p>
      * 是否执行 SQL 解析 parser 方法
      * </p>

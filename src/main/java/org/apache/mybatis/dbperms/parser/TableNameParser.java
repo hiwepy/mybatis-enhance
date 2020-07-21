@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
+/*
  * SQL 表名解析
  * https://github.com/mnadeem/sql-table-name-parser
  * Ultra light, Ultra fast parser to extract table name out SQLs, supports oracle dialect SQLs as well.
@@ -67,7 +67,7 @@ public final class TableNameParser {
 
     private Map<String, String> tables = new HashMap<>();
 
-    /**
+    /*
      * Extracts table names out of SQL
      * @param sql
      */
@@ -259,7 +259,7 @@ public final class TableNameParser {
         }
     }
 
-    /**
+    /*
      * parser tables
      *
      * @return table names extracted out of sql
