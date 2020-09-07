@@ -67,83 +67,85 @@ public class DefaultDataPermissionStatementInterceptor extends AbstractDataPermi
 			//提取被国际化注解标记的方法
 			Method method = metaStatementHandler.getMethod(); 
 			// Method method = BeanMethodDefinitionFactory.getMethodDefinition(mappedStatement.getId());
-			// 获取 @RequiresPermissions 注解标记
-			RequiresPermissions permissions = AnnotationUtils.findAnnotation(method, RequiresPermissions.class);
-			// 需要权限控制
-			if(permissions != null) {
-				// 框架自动进行数据权限注入
-				if(permissions.autowire()) {
-					originalSQL = autowirePermissionParser.parser(metaStatementHandler, originalSQL);
+			if(null != method) {
+				// 获取 @RequiresPermissions 注解标记
+				RequiresPermissions permissions = AnnotationUtils.findAnnotation(method, RequiresPermissions.class);
+				// 需要权限控制
+				if(permissions != null) {
+					// 框架自动进行数据权限注入
+					if(permissions.autowire()) {
+						originalSQL = autowirePermissionParser.parser(metaStatementHandler, originalSQL);
+					}
+					// 普通字符关联权限
+					else if(ArrayUtils.isNotEmpty(permissions.value())){
+						originalSQL = annotationPermissionParser.parser(metaStatementHandler, originalSQL, permissions.value());
+					}
+					// 特殊表关联权限
+					else if(ArrayUtils.isNotEmpty(permissions.special())){
+						originalSQL = annotationPermissionParser.parser(metaStatementHandler, originalSQL, permissions.special());
+					}
+					// 将处理后的物理分页sql重新写入作为执行SQL
+					metaBoundSql.setValue("sql", originalSQL);
+					if (LOG.isDebugEnabled()) {
+						LOG.debug(" Permissioned SQL : "+ statementHandler.getBoundSql().getSql());
+					}
+					// 将执行权交给下一个拦截器  
+					return invocation.proceed();
+				} 
+				
+				// 获取 @RequiresPermission 注解标记
+				RequiresPermission permission = AnnotationUtils.findAnnotation(method, RequiresPermission.class);
+				if (permission != null) {
+					originalSQL = annotationPermissionParser.parser(metaStatementHandler, originalSQL, permission);
+					// 将处理后的物理分页sql重新写入作为执行SQL
+					metaBoundSql.setValue("sql", originalSQL);
+					if (LOG.isDebugEnabled()) {
+						LOG.debug(" Permissioned SQL : "+ statementHandler.getBoundSql().getSql());
+					}
+					// 将执行权交给下一个拦截器  
+					return invocation.proceed();
 				}
-				// 普通字符关联权限
-				else if(ArrayUtils.isNotEmpty(permissions.value())){
-					originalSQL = annotationPermissionParser.parser(metaStatementHandler, originalSQL, permissions.value());
-				}
-				// 特殊表关联权限
-				else if(ArrayUtils.isNotEmpty(permissions.special())){
-					originalSQL = annotationPermissionParser.parser(metaStatementHandler, originalSQL, permissions.special());
-				}
-				// 将处理后的物理分页sql重新写入作为执行SQL
-				metaBoundSql.setValue("sql", originalSQL);
-				if (LOG.isDebugEnabled()) {
-					LOG.debug(" Permissioned SQL : "+ statementHandler.getBoundSql().getSql());
-				}
-				// 将执行权交给下一个拦截器  
-				return invocation.proceed();
-			} 
-			
-			// 获取 @RequiresPermission 注解标记
-			RequiresPermission permission = AnnotationUtils.findAnnotation(method, RequiresPermission.class);
-			if (permission != null) {
-				originalSQL = annotationPermissionParser.parser(metaStatementHandler, originalSQL, permission);
-				// 将处理后的物理分页sql重新写入作为执行SQL
-				metaBoundSql.setValue("sql", originalSQL);
-				if (LOG.isDebugEnabled()) {
-					LOG.debug(" Permissioned SQL : "+ statementHandler.getBoundSql().getSql());
-				}
-				// 将执行权交给下一个拦截器  
-				return invocation.proceed();
-			}
 
-			// 获取 @RequiresSpecialPermission 注解标记
-			RequiresSpecialPermission specialPermission = AnnotationUtils.findAnnotation(method, RequiresSpecialPermission.class);
-			if (specialPermission != null) {
-				originalSQL = annotationPermissionParser.parser(metaStatementHandler, originalSQL, specialPermission);
-				// 将处理后的物理分页sql重新写入作为执行SQL
-				metaBoundSql.setValue("sql", originalSQL);
-				if (LOG.isDebugEnabled()) {
-					LOG.debug(" Permissioned SQL : "+ statementHandler.getBoundSql().getSql());
+				// 获取 @RequiresSpecialPermission 注解标记
+				RequiresSpecialPermission specialPermission = AnnotationUtils.findAnnotation(method, RequiresSpecialPermission.class);
+				if (specialPermission != null) {
+					originalSQL = annotationPermissionParser.parser(metaStatementHandler, originalSQL, specialPermission);
+					// 将处理后的物理分页sql重新写入作为执行SQL
+					metaBoundSql.setValue("sql", originalSQL);
+					if (LOG.isDebugEnabled()) {
+						LOG.debug(" Permissioned SQL : "+ statementHandler.getBoundSql().getSql());
+					}
+					// 将执行权交给下一个拦截器  
+					return invocation.proceed();
 				}
-				// 将执行权交给下一个拦截器  
-				return invocation.proceed();
-			}
-			
+			}			
 			// 获取接口类型
 			Class<?> mapperInterface = metaStatementHandler.getMapperInterface();
-			permissions = AnnotationUtils.findAnnotation(mapperInterface, RequiresPermissions.class);
-			// 需要权限控制
-			if(permissions != null) {
-				// 框架自动进行数据权限注入
-				if(permissions.autowire()) {
-					originalSQL = autowirePermissionParser.parser(metaStatementHandler, originalSQL);
+			if(null != mapperInterface) {
+				RequiresPermissions	permissions = AnnotationUtils.findAnnotation(mapperInterface, RequiresPermissions.class);
+				// 需要权限控制
+				if(permissions != null) {
+					// 框架自动进行数据权限注入
+					if(permissions.autowire()) {
+						originalSQL = autowirePermissionParser.parser(metaStatementHandler, originalSQL);
+					}
+					// 普通字符关联权限
+					else if(ArrayUtils.isNotEmpty(permissions.value())){
+						originalSQL = annotationPermissionParser.parser(metaStatementHandler, originalSQL, permissions.value());
+					}
+					// 特殊表关联权限
+					else if(ArrayUtils.isNotEmpty(permissions.special())){
+						originalSQL = annotationPermissionParser.parser(metaStatementHandler, originalSQL, permissions.special());
+					}
+					// 将处理后的物理分页sql重新写入作为执行SQL
+					metaBoundSql.setValue("sql", originalSQL);
+					if (LOG.isDebugEnabled()) {
+						LOG.debug(" Permissioned SQL : "+ statementHandler.getBoundSql().getSql());
+					}
+					// 将执行权交给下一个拦截器  
+					return invocation.proceed();
 				}
-				// 普通字符关联权限
-				else if(ArrayUtils.isNotEmpty(permissions.value())){
-					originalSQL = annotationPermissionParser.parser(metaStatementHandler, originalSQL, permissions.value());
-				}
-				// 特殊表关联权限
-				else if(ArrayUtils.isNotEmpty(permissions.special())){
-					originalSQL = annotationPermissionParser.parser(metaStatementHandler, originalSQL, permissions.special());
-				}
-				// 将处理后的物理分页sql重新写入作为执行SQL
-				metaBoundSql.setValue("sql", originalSQL);
-				if (LOG.isDebugEnabled()) {
-					LOG.debug(" Permissioned SQL : "+ statementHandler.getBoundSql().getSql());
-				}
-				// 将执行权交给下一个拦截器  
-				return invocation.proceed();
-			}
-			 
+			}			 
 		}
 		// 将执行权交给下一个拦截器  
 		return invocation.proceed();

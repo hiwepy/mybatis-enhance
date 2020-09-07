@@ -26,6 +26,7 @@ import org.apache.ibatis.plugin.AbstractInterceptorAdapter;
 import org.apache.ibatis.plugin.Invocation;
 import org.apache.ibatis.plugin.Plugin;
 import org.apache.ibatis.plugin.meta.MetaStatementHandler;
+import org.apache.mybatis.dbperms.annotation.NotRequiresPermission;
 import org.apache.mybatis.dbperms.annotation.RequiresPermission;
 import org.apache.mybatis.dbperms.annotation.RequiresPermissions;
 import org.apache.mybatis.dbperms.annotation.RequiresSpecialPermission;
@@ -49,13 +50,27 @@ public abstract class AbstractDataPermissionInterceptor extends AbstractIntercep
 		Method method = metaStatementHandler.getMethod(); 
 		// 获取接口类型
 		Class<?> mapperInterface = metaStatementHandler.getMapperInterface();
-		
+		// 无需数据权限控制
+		if( null != mapperInterface && AnnotationUtils.findAnnotation(mapperInterface, NotRequiresPermission.class) != null) {
+			return false;
+		}
+		if( null != method &&  AnnotationUtils.findAnnotation(method, NotRequiresPermission.class) != null) {
+			return false;
+		}
+		// 需要数据权限控制
+		if (SqlCommandType.SELECT.equals(mappedStatement.getSqlCommandType())) {
+			if (null != mapperInterface
+					&& AnnotationUtils.findAnnotation(mapperInterface, RequiresPermissions.class) != null) {
+				return true;
+			}
+			if (null != method && (AnnotationUtils.findAnnotation(method, RequiresPermissions.class) != null
+					|| AnnotationUtils.findAnnotation(method, RequiresPermission.class) != null
+					|| AnnotationUtils.findAnnotation(method, RequiresSpecialPermission.class) != null)) {
+				return true;
+			}
+		}
 		//BeanMethodDefinitionFactory.getMethodDefinition(mappedStatement.getId(), paramObject != null ? new Class<?>[] {paramObject.getClass()} : null);
-		return  SqlCommandType.SELECT.equals(mappedStatement.getSqlCommandType()) && method != null &&
-				(AnnotationUtils.findAnnotation(mapperInterface, RequiresPermissions.class) != null || 
-				 AnnotationUtils.findAnnotation(method, RequiresPermissions.class) != null || 
-				 AnnotationUtils.findAnnotation(method, RequiresPermission.class) != null ||
-				 AnnotationUtils.findAnnotation(method, RequiresSpecialPermission.class) != null);
+		return false;
 	}
 	
 	protected boolean isIntercepted(CacheKey cacheKey) {
