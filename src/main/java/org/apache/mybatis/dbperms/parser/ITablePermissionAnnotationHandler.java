@@ -23,7 +23,7 @@ import org.apache.mybatis.dbperms.annotation.RequiresSpecialPermission;
 
 public interface ITablePermissionAnnotationHandler {
 
-    /**
+    /*
      * 表名 SQL 处理
      *
      * @param metaHandler 元对象
@@ -33,22 +33,16 @@ public interface ITablePermissionAnnotationHandler {
      */
     default Optional<String> process(MetaStatementHandler metaHandler, RequiresPermission permission) {
         String permissionedSQL = dynamicPermissionedSQL(metaHandler, permission);
-        if (null != permissionedSQL) {
-        	return Optional.of(permissionedSQL);
-        }
-        return Optional.empty();
+        return Optional.ofNullable(permissionedSQL);
     }
     
     default Optional<String> process(MetaStatementHandler metaHandler, RequiresSpecialPermission permission){
         String permissionedSQL = dynamicPermissionedSQL(metaHandler, permission);
-        if (null != permissionedSQL) {
-        	return Optional.of(permissionedSQL);
-        }
-        return Optional.empty();
+        return Optional.ofNullable(permissionedSQL);
     }
     
     
-    /**
+    /*
      * <p>
      * 是否执行 SQL 解析 parser 方法
      * </p>

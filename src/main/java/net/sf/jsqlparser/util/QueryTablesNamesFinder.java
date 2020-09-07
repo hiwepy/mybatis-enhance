@@ -164,7 +164,7 @@ public class QueryTablesNamesFinder implements SelectVisitor, FromItemVisitor, E
         select.getSelectBody().accept(this);
     }
 
-    /**
+    /*
      * Main entry for this Tool class. A list of found tables is returned.
      */
     public List<String> getTableList(Expression expr) {
@@ -196,7 +196,7 @@ public class QueryTablesNamesFinder implements SelectVisitor, FromItemVisitor, E
         }
     }
 
-    /**
+    /*
      * Override to adapt the tableName generation (e.g. with / without schema).
      *
      * @param table
@@ -536,7 +536,7 @@ public class QueryTablesNamesFinder implements SelectVisitor, FromItemVisitor, E
     public void visit(ValuesList valuesList) {
     }
 
-    /**
+    /*
      * Initializes table names collector. Important is the usage of Column instances to find table
      * names. This is only allowed for expression parsing, where a better place for tablenames could
      * not be there. For complete statements only from items are used to avoid some alias as

@@ -22,7 +22,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/**
+/*
  * 该注解用于方法，字段；指明字段
  */
 @Documented
@@ -31,15 +31,15 @@ import java.lang.annotation.Target;
 @Target({ElementType.METHOD})
 public @interface RequiresPermission {
 
-	/**
+	/*
 	 *受限表名称（实体表名称）
 	 */
 	public abstract String table();
-	/**
+	/*
 	 * 数据权限项数组
 	 */
 	public abstract RequiresPermissionColumn[] value();
-	/**
+	/*
 	 * 数据权限项关系 and/or
 	 */
 	public abstract Relational relation();

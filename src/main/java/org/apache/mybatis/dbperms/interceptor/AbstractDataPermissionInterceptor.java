@@ -46,7 +46,7 @@ public abstract class AbstractDataPermissionInterceptor extends AbstractIntercep
 		// 获取对应的BoundSql，这个BoundSql其实跟我们利用StatementHandler获取到的BoundSql是同一个对象。
 		// BoundSql boundSql = metaStatementHandler.getBoundSql();
 		// Object paramObject = boundSql.getParameterObject();
-		//提取被国际化注解标记的方法
+		// 提取被数据权限注解标记的方法
 		Method method = metaStatementHandler.getMethod(); 
 		// 获取接口类型
 		Class<?> mapperInterface = metaStatementHandler.getMapperInterface();

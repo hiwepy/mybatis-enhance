@@ -17,6 +17,8 @@ package org.apache.mybatis.dbperms.dto;
 
 import java.util.List;
 
+import org.apache.mybatis.dbperms.annotation.Relational;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -28,8 +30,19 @@ public class DataPermissionPayload {
 	
 	String code;
 	
+	/**
+	 * 普通数据权限
+	 */
 	List<DataPermission> permissions;
 	
+	/**
+	 * 普通数据权限与特殊数据权限的关系 and/or
+	 */
+	private Relational relation = Relational.AND;
+	
+	/**
+	 * 特殊数据权限
+	 */
 	List<DataSpecialPermission> specialPermissions;
 
 }

@@ -23,6 +23,10 @@ public class DataPermission {
 	 */
 	private String sql;
 	/**
+	 * 与其他限制条件组的关系 and/or
+	 */
+	private Relational groupRelation = Relational.OR;
+	/**
 	 * 数据权限项关系 and/or
 	 */
 	private Relational relation = Relational.AND;

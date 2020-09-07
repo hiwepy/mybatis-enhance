@@ -22,7 +22,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/**
+/*
  * 该注解用于方法，字段；指明字段
  */
 @Documented
@@ -31,19 +31,19 @@ import java.lang.annotation.Target;
 @Target({ElementType.FIELD})
 public @interface RequiresPermissionColumn {
 
-	/**
+	/*
 	 * 受限表字段名称（实体表字段列名称）
 	 */
 	public abstract String column();
-	/**
+	/*
 	 * 受限表字段与限制条件之间的关联条件
 	 */
 	public abstract Condition condition();
-	/**
+	/*
 	 *外关联表名称（实体表名称），在 condition 为 EXISTS、NOT_EXISTS 时有意义
 	 */
 	public abstract RequiresPermissionForeign foreign() default @RequiresPermissionForeign(condition = ForeignCondition.EQ);
-	/**
+	/*
 	 * 受限表字段限制条件：
 	 */
 	public abstract String perms();

@@ -21,7 +21,7 @@ import org.apache.ibatis.plugin.meta.MetaStatementHandler;
 
 public interface ITablePermissionAutowireHandler {
 	
-	/**
+	/*
      * 表名 SQL 处理
      *
      * @param metaHandler 元对象
@@ -31,13 +31,10 @@ public interface ITablePermissionAutowireHandler {
      */
     default Optional<String> process(MetaStatementHandler metaHandler, String tableName) {
         String permissionedSQL = dynamicPermissionedSQL(metaHandler, tableName);
-        if (null != permissionedSQL) {
-			return Optional.of(permissionedSQL);
-        }
-        return Optional.empty();
+        return Optional.ofNullable(permissionedSQL);
     }
 
-    /**
+    /*
      * 生成动态表名，无改变返回 NULL
      *
      * @param metaHandler 元对象
