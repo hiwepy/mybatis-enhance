@@ -15,7 +15,6 @@
  */
 package org.mybatis.spring.mapper;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.PropertyValue;
@@ -34,6 +33,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
+import org.springframework.util.StringUtils;
 
 import java.lang.annotation.Annotation;
 import java.util.Map;
@@ -267,6 +267,7 @@ public class MybatisMapperScannerConfigurer implements
 	/*
 	 * {@inheritDoc}
 	 */
+	@Override
 	public void setApplicationContext(ApplicationContext applicationContext) {
 		this.applicationContext = applicationContext;
 	}
@@ -274,6 +275,7 @@ public class MybatisMapperScannerConfigurer implements
 	/*
 	 * {@inheritDoc}
 	 */
+	@Override
 	public void setBeanName(String name) {
 		this.beanName = name;
 	}
@@ -302,6 +304,7 @@ public class MybatisMapperScannerConfigurer implements
 	/*
 	 * {@inheritDoc}
 	 */
+	@Override
 	public void afterPropertiesSet() throws Exception {
 		notNull(this.basePackage, "Property 'basePackage' is required");
 	}
@@ -309,6 +312,7 @@ public class MybatisMapperScannerConfigurer implements
 	/*
 	 * {@inheritDoc}
 	 */
+	@Override
 	public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) {
 		// left intentionally blank
 	}
@@ -318,6 +322,7 @@ public class MybatisMapperScannerConfigurer implements
 	 *
 	 * @since 1.0.2
 	 */
+	@Override
 	public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) {
 		if (this.processPropertyPlaceHolders) {
 			processPropertyPlaceHolders();

@@ -16,12 +16,12 @@
 package org.apache.mybatis.enhance.i18n.i18n.handler.def;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.mybatis.dbi18n.annotation.I18nColumn;
-import org.apache.mybatis.dbi18n.annotation.I18nLocale;
-import org.apache.mybatis.dbi18n.annotation.I18nMapper;
-import org.apache.mybatis.dbi18n.annotation.I18nPrimary;
-import org.apache.mybatis.dbi18n.i18n.handler.DataI18nMappedHandler;
-import org.apache.mybatis.dbi18n.i18n.handler.DataI18nMapper;
+import org.apache.mybatis.enhance.annotation.I18nColumn;
+import org.apache.mybatis.enhance.annotation.I18nLocale;
+import org.apache.mybatis.enhance.annotation.I18nMapper;
+import org.apache.mybatis.enhance.annotation.I18nPrimary;
+import org.apache.mybatis.enhance.i18n.i18n.handler.DataI18nMappedHandler;
+import org.apache.mybatis.enhance.i18n.i18n.handler.DataI18nMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -93,7 +93,7 @@ public class DefaultDataI18nMappedHandler implements DataI18nMappedHandler {
 
 
 	@Override
-	public DataI18nMapper handle(Locale locale,I18nMapper i18nMapper, String primaryName , Object orginObject, Object i18nObject) throws Exception {
+	public DataI18nMapper handle(Locale locale, I18nMapper i18nMapper, String primaryName , Object orginObject, Object i18nObject) throws Exception {
 		DataI18nMapper ret = COMPLIED_I18N_MAPPER.get(orginObject.getClass());
 		if (ret != null) {
 			return ret;

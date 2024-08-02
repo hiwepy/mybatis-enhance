@@ -1,8 +1,8 @@
 package org.apache.ibatis.utils.uid;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
 
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;

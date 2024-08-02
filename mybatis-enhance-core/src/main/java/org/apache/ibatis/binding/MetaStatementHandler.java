@@ -92,7 +92,7 @@ public class MetaStatementHandler {
 				MapperProxyFactory<?> mapperProxy = (MapperProxyFactory<?>) mapperProxyObject;
 
 				mapperInterface = mapperProxy.getMapperInterface();
-				Optional<Entry<Method, MapperMethod>> mapperProxyEntry = mapperProxy.getMethodCache().entrySet().stream().filter(entry -> {
+				Optional<Entry<Method, MapperProxy.MapperMethodInvoker>> mapperProxyEntry = mapperProxy.getMethodCache().entrySet().stream().filter(entry -> {
 					String statement = mapperProxy.getMapperInterface().getName() + "." + entry.getKey().getName();
 					return mappedStatement.getId().equalsIgnoreCase(statement);
 				}).findFirst();
@@ -140,14 +140,14 @@ public class MetaStatementHandler {
 
 				MapperProxyFactory<?> mapperProxy = (MapperProxyFactory<?>) mapperProxyObject;
 				mapperInterface = mapperProxy.getMapperInterface();
-				Optional<Entry<Method, MapperMethod>> mapperProxyEntry = mapperProxy.getMethodCache().entrySet().stream().filter(entry -> {
+				Optional<Entry<Method, MapperProxy.MapperMethodInvoker>> mapperProxyEntry = mapperProxy.getMethodCache().entrySet().stream().filter(entry -> {
 					String statement = mapperProxy.getMapperInterface().getName() + "." + entry.getKey().getName();
 					return mappedStatement.getId().equalsIgnoreCase(statement);
 				}).findFirst();
 				if(mapperProxyEntry.isPresent()) {
 					method = mapperProxyEntry.get().getKey();
 				}
-			} else if(mapperProxyObject instanceof MybatisMapperProxyFactory) {
+			}/* else if(mapperProxyObject instanceof MybatisMapperProxyFactory) {
 				MybatisMapperProxyFactory<?> mapperProxy = (MybatisMapperProxyFactory<?>) mapperProxyObject;
 				mapperInterface = mapperProxy.getMapperInterface();
 				Optional<Entry<Method, MybatisMapperMethod>> mapperProxyEntry = mapperProxy.getMethodCache().entrySet().stream().filter(entry -> {
@@ -157,7 +157,7 @@ public class MetaStatementHandler {
 				if(mapperProxyEntry.isPresent()) {
 					method = mapperProxyEntry.get().getKey();
 				}
-			}
+			}*/
 
 			return new MetaStatementHandler(metaObject, configuration, objectFactory, typeHandlerRegistry, resultSetHandler,
 					parameterHandler, executor, mappedStatement, mapperInterface, method, rowBounds, boundSql);

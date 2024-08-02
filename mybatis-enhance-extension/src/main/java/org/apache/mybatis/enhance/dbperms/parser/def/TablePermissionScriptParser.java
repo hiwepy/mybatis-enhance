@@ -18,8 +18,8 @@ package org.apache.mybatis.enhance.dbperms.parser.def;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import org.apache.ibatis.binding.MetaStatementHandler;
-import org.apache.mybatis.enhance.parser.ITablePermissionParser;
-import org.apache.mybatis.enhance.parser.ITablePermissionScriptHandler;
+import org.apache.mybatis.enhance.dbperms.parser.ITablePermissionParser;
+import org.apache.mybatis.enhance.dbperms.parser.ITablePermissionScriptHandler;
 
 import java.util.Optional;
 import java.util.regex.Matcher;

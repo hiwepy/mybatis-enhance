@@ -43,7 +43,7 @@ public class StringListTypeHandler extends BaseTypeHandler<List<String>> {
 	@Override
 	public List<String> getNullableResult(ResultSet rs, String columnName) throws SQLException {
 		String rtString = rs.getString(columnName);
-		if(StringUtils.hasText(rtString)) {
+		if(StringUtils.isNotBlank(rtString)) {
 			return Arrays.asList(rtString.split(","));
 		}
 		return null;
@@ -52,7 +52,7 @@ public class StringListTypeHandler extends BaseTypeHandler<List<String>> {
 	@Override
 	public List<String> getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
 		String rtString = rs.getString(columnIndex);
-		if(StringUtils.hasText(rtString)) {
+		if(StringUtils.isNotBlank(rtString)) {
 			return Arrays.asList(rtString.split(","));
 		}
 		return null;
@@ -61,7 +61,7 @@ public class StringListTypeHandler extends BaseTypeHandler<List<String>> {
 	@Override
 	public List<String> getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
 		String rtString = cs.getString(columnIndex);
-		if(StringUtils.hasText(rtString)) {
+		if(StringUtils.isNotBlank(rtString)) {
 			return Arrays.asList(rtString.split(","));
 		}
 		return null;

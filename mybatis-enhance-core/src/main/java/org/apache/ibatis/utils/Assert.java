@@ -1,6 +1,8 @@
  package org.apache.ibatis.utils;
 
- import org.apache.commons.lang3.StringUtils;
+
+
+ import org.springframework.util.StringUtils;
 
  import java.util.Collection;
  import java.util.Map;

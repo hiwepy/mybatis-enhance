@@ -16,10 +16,8 @@
 package org.apache.mybatis.enhance.dbperms.parser;
 
 import org.apache.ibatis.binding.MetaStatementHandler;
-import org.apache.mybatis.enhance.dto.DataPermission;
-import org.apache.mybatis.enhance.dto.DataPermissionColumn;
-import org.apache.mybatis.enhance.dto.DataPermissionPart;
-import org.apache.mybatis.enhance.dto.DataPermissionPayload;
+
+import org.apache.mybatis.enhance.dbperms.dto.*;
 import org.apache.mybatis.enhance.utils.RandomString;
 import org.apache.mybatis.enhance.utils.StringUtils;
 import org.springframework.util.CollectionUtils;

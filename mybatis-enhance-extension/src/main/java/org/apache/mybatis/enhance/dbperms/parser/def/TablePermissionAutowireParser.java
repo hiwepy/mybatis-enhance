@@ -24,8 +24,8 @@ import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.util.SelectAutowirePermissionParser;
 import org.apache.ibatis.exception.MybatisException;
 import org.apache.ibatis.binding.MetaStatementHandler;
-import org.apache.mybatis.enhance.parser.ITablePermissionAutowireHandler;
-import org.apache.mybatis.enhance.parser.ITablePermissionParser;
+import org.apache.mybatis.enhance.dbperms.parser.ITablePermissionAutowireHandler;
+import org.apache.mybatis.enhance.dbperms.parser.ITablePermissionParser;
 
 @Data
 @Accessors(chain = true)

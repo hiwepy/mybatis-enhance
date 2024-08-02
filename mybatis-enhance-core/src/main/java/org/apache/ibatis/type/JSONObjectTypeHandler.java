@@ -15,7 +15,7 @@
  */
 package org.apache.ibatis.type;
 
-import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson2.JSONObject;
 import org.apache.commons.lang3.StringUtils;
 
 import java.sql.CallableStatement;
@@ -34,7 +34,7 @@ public class JSONObjectTypeHandler extends BaseTypeHandler<JSONObject> {
 	@Override
 	public JSONObject getNullableResult(ResultSet rs, String columnName) throws SQLException {
 		String rtString = rs.getString(columnName);
-		if(StringUtils.hasText(rtString)) {
+		if(StringUtils.isNotBlank(rtString)) {
 			return JSONObject.parseObject(rtString);
 		}
 		return null;
@@ -43,7 +43,7 @@ public class JSONObjectTypeHandler extends BaseTypeHandler<JSONObject> {
 	@Override
 	public JSONObject getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
 		String rtString = rs.getString(columnIndex);
-		if(StringUtils.hasText(rtString)) {
+		if(StringUtils.isNotBlank(rtString)) {
 			return JSONObject.parseObject(rtString);
 		}
 		return null;
@@ -52,7 +52,7 @@ public class JSONObjectTypeHandler extends BaseTypeHandler<JSONObject> {
 	@Override
 	public JSONObject getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
 		String rtString = cs.getString(columnIndex);
-		if(StringUtils.hasText(rtString)) {
+		if(StringUtils.isNotBlank(rtString)) {
 			return JSONObject.parseObject(rtString);
 		}
 		return null;

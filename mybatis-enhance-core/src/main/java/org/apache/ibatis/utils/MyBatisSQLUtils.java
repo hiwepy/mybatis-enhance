@@ -1,6 +1,5 @@
 package org.apache.ibatis.utils;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.mapping.ParameterMapping;
@@ -18,7 +17,7 @@ import java.util.*;
 public class MyBatisSQLUtils {
 
 	public static String getParameterValue(Object obj,boolean isReplace) {
-		if(StringUtils.isEmpty(obj)){
+		if(Objects.isNull(obj)){
         	return "";
         }
 		String value = null;

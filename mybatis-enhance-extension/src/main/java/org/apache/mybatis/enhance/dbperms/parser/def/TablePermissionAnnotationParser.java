@@ -25,11 +25,11 @@ import net.sf.jsqlparser.util.SelectAnnotationPermissionParser;
 import net.sf.jsqlparser.util.SelectAnnotationPermissionsParser;
 import net.sf.jsqlparser.util.SelectAnnotationSpecialPermissionParser;
 import net.sf.jsqlparser.util.SelectAnnotationSpecialPermissionsParser;
-import org.apache.ibatis.exception.MybatisException;
 import org.apache.ibatis.binding.MetaStatementHandler;
+import org.apache.ibatis.exception.MybatisException;
 import org.apache.mybatis.enhance.annotation.RequiresPermission;
 import org.apache.mybatis.enhance.annotation.RequiresSpecialPermission;
-import org.apache.mybatis.enhance.parser.ITablePermissionParser;
+import org.apache.mybatis.enhance.dbperms.parser.ITablePermissionParser;
 
 @Data
 @Accessors(chain = true)

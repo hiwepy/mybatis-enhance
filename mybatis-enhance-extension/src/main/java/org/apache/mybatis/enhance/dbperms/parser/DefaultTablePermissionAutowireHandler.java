@@ -17,10 +17,10 @@ package org.apache.mybatis.enhance.dbperms.parser;
 
 import org.apache.ibatis.binding.MetaStatementHandler;
 import org.apache.ibatis.utils.CollectionUtils;
-import org.apache.mybatis.enhance.dto.DataPermission;
-import org.apache.mybatis.enhance.dto.DataPermissionColumn;
-import org.apache.mybatis.enhance.dto.DataPermissionPayload;
-import org.apache.mybatis.enhance.dto.DataSpecialPermission;
+import org.apache.mybatis.enhance.dbperms.dto.DataPermission;
+import org.apache.mybatis.enhance.dbperms.dto.DataPermissionColumn;
+import org.apache.mybatis.enhance.dbperms.dto.DataPermissionPayload;
+import org.apache.mybatis.enhance.dbperms.dto.DataSpecialPermission;
 import org.apache.mybatis.enhance.utils.PatternFormatUtils;
 import org.apache.mybatis.enhance.utils.RandomString;
 import org.apache.mybatis.enhance.utils.SqlBuildUtils;

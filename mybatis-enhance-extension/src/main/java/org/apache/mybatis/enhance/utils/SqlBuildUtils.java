@@ -17,10 +17,8 @@ package org.apache.mybatis.enhance.utils;
 
 import org.apache.ibatis.utils.CollectionUtils;
 import org.apache.mybatis.enhance.annotation.Relational;
-import org.apache.mybatis.enhance.dto.DataPermission;
-import org.apache.mybatis.enhance.dto.DataPermissionColumn;
-import org.apache.mybatis.enhance.dto.DataPermissionForeign;
-import org.apache.mybatis.enhance.dto.DataSpecialPermission;
+
+import org.apache.mybatis.enhance.dbperms.dto.*;
 
 import java.util.*;
 import java.util.Map.Entry;

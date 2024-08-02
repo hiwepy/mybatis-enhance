@@ -42,7 +42,7 @@ import net.sf.jsqlparser.statement.upsert.Upsert;
 import net.sf.jsqlparser.statement.values.ValuesStatement;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.binding.MetaStatementHandler;
-import org.apache.mybatis.enhance.parser.ITablePermissionAutowireHandler;
+import org.apache.mybatis.enhance.dbperms.parser.ITablePermissionAutowireHandler;
 
 import java.util.HashMap;
 import java.util.Map;
