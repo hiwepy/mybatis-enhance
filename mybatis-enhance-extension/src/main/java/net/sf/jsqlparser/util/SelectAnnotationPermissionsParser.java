@@ -135,7 +135,7 @@ public class SelectAnnotationPermissionsParser extends StatementVisitorAdapter
     }
 
     @Override
-    public void visit(SubSelect subSelect) {
+    public void visit(Select subSelect) {
         if (subSelect.getWithItemsList() != null) {
             for (WithItem withItem : subSelect.getWithItemsList()) {
                 withItem.accept(this);

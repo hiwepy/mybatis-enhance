@@ -15,6 +15,7 @@
  */
 package org.apache.mybatis.enhance.dbperms.interceptor;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.mapping.BoundSql;
@@ -37,15 +38,16 @@ import org.springframework.core.annotation.AnnotationUtils;
 
 import java.lang.reflect.Method;
 import java.sql.Connection;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Intercepts({
 	@Signature(type = StatementHandler.class, method = "prepare", args = {Connection.class, Integer.class})
 })
+@Slf4j
 public class DefaultDataPermissionStatementInterceptor extends AbstractDataPermissionInterceptor {
 
-	protected static Logger LOG = LoggerFactory.getLogger(DefaultDataPermissionStatementInterceptor.class);
 	protected final Pattern scriptPattern = Pattern.compile("(?:(?:\\{)(?:[^\\{\\}]*?)(?:\\}))+");
 	protected final TablePermissionAutowireParser autowirePermissionParser;
 	protected final TablePermissionAnnotationParser annotationPermissionParser;
@@ -81,24 +83,24 @@ public class DefaultDataPermissionStatementInterceptor extends AbstractDataPermi
 
 			// 匹配SQL中的数据权限规则函数
 			Matcher matcher = scriptPattern.matcher(originalSQL);
-			if (null != scriptPermissionParser && matcher.find()) {
+			if (Objects.nonNull(scriptPermissionParser) && matcher.find()) {
 				// 对原始SQL进行数据范围限制条件的处理
 				originalSQL = scriptPermissionParser.parser(metaStatementHandler, originalSQL);
-            	//将处理后的SQL重新写入作为执行SQL
+            	// 将处理后的SQL重新写入作为执行SQL
 	            metaBoundSql.setValue("sql", originalSQL);
-				if (LOG.isDebugEnabled()) {
-					LOG.debug(" Permissioned SQL : "+ statementHandler.getBoundSql().getSql());
+				if (log.isDebugEnabled()) {
+					log.debug(" Permissioned SQL : "+ statementHandler.getBoundSql().getSql());
 				}
 			}
 
 			// 提取被数据权限注解标记的方法
 			Method method = metaStatementHandler.getMethod();
 			// Method method = BeanMethodDefinitionFactory.getMethodDefinition(mappedStatement.getId());
-			if(null != method) {
+			if(Objects.nonNull(method)) {
 				// 获取 @RequiresPermissions 注解标记
 				RequiresPermissions permissions = AnnotationUtils.findAnnotation(method, RequiresPermissions.class);
 				// 需要权限控制
-				if(permissions != null) {
+				if(Objects.nonNull(permissions)) {
 					// 框架自动进行数据权限注入
 					if(permissions.autowire()) {
 						originalSQL = autowirePermissionParser.parser(metaStatementHandler, originalSQL);
@@ -113,8 +115,8 @@ public class DefaultDataPermissionStatementInterceptor extends AbstractDataPermi
 					}
 					// 将处理后的物理分页sql重新写入作为执行SQL
 					metaBoundSql.setValue("sql", originalSQL);
-					if (LOG.isDebugEnabled()) {
-						LOG.debug(" Permissioned SQL : "+ statementHandler.getBoundSql().getSql());
+					if (log.isDebugEnabled()) {
+						log.debug(" Permissioned SQL : "+ statementHandler.getBoundSql().getSql());
 					}
 					// 将执行权交给下一个拦截器
 					return invocation.proceed();
@@ -122,12 +124,12 @@ public class DefaultDataPermissionStatementInterceptor extends AbstractDataPermi
 
 				// 获取 @RequiresPermission 注解标记
 				RequiresPermission permission = AnnotationUtils.findAnnotation(method, RequiresPermission.class);
-				if (permission != null) {
+				if (Objects.nonNull(permission)) {
 					originalSQL = annotationPermissionParser.parser(metaStatementHandler, originalSQL, permission);
 					// 将处理后的物理分页sql重新写入作为执行SQL
 					metaBoundSql.setValue("sql", originalSQL);
-					if (LOG.isDebugEnabled()) {
-						LOG.debug(" Permissioned SQL : "+ statementHandler.getBoundSql().getSql());
+					if (log.isDebugEnabled()) {
+						log.debug(" Permissioned SQL : "+ statementHandler.getBoundSql().getSql());
 					}
 					// 将执行权交给下一个拦截器
 					return invocation.proceed();
@@ -135,12 +137,12 @@ public class DefaultDataPermissionStatementInterceptor extends AbstractDataPermi
 
 				// 获取 @RequiresSpecialPermission 注解标记
 				RequiresSpecialPermission specialPermission = AnnotationUtils.findAnnotation(method, RequiresSpecialPermission.class);
-				if (specialPermission != null) {
+				if (Objects.nonNull(specialPermission)) {
 					originalSQL = annotationPermissionParser.parser(metaStatementHandler, originalSQL, specialPermission);
 					// 将处理后的物理分页sql重新写入作为执行SQL
 					metaBoundSql.setValue("sql", originalSQL);
-					if (LOG.isDebugEnabled()) {
-						LOG.debug(" Permissioned SQL : "+ statementHandler.getBoundSql().getSql());
+					if (log.isDebugEnabled()) {
+						log.debug(" Permissioned SQL : "+ statementHandler.getBoundSql().getSql());
 					}
 					// 将执行权交给下一个拦截器
 					return invocation.proceed();
@@ -148,10 +150,10 @@ public class DefaultDataPermissionStatementInterceptor extends AbstractDataPermi
 			}
 			// 获取接口类型
 			Class<?> mapperInterface = metaStatementHandler.getMapperInterface();
-			if(null != mapperInterface) {
+			if(Objects.nonNull(mapperInterface)) {
 				RequiresPermissions	permissions = AnnotationUtils.findAnnotation(mapperInterface, RequiresPermissions.class);
 				// 需要权限控制
-				if(permissions != null) {
+				if (Objects.nonNull(permissions)) {
 					// 框架自动进行数据权限注入
 					if(permissions.autowire()) {
 						originalSQL = autowirePermissionParser.parser(metaStatementHandler, originalSQL);
@@ -166,8 +168,8 @@ public class DefaultDataPermissionStatementInterceptor extends AbstractDataPermi
 					}
 					// 将处理后的物理分页sql重新写入作为执行SQL
 					metaBoundSql.setValue("sql", originalSQL);
-					if (LOG.isDebugEnabled()) {
-						LOG.debug(" Permissioned SQL : "+ statementHandler.getBoundSql().getSql());
+					if (log.isDebugEnabled()) {
+						log.debug(" Permissioned SQL : "+ statementHandler.getBoundSql().getSql());
 					}
 					// 将执行权交给下一个拦截器
 					return invocation.proceed();

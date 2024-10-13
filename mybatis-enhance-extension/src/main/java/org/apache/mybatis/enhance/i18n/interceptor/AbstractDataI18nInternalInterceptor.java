@@ -15,6 +15,7 @@
  */
 package org.apache.mybatis.enhance.i18n.interceptor;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.exceptions.ExceptionFactory;
 import org.apache.ibatis.executor.ErrorContext;
 import org.apache.ibatis.executor.Executor;
@@ -37,17 +38,17 @@ import org.slf4j.LoggerFactory;
 import java.sql.Connection;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
+@Slf4j
 public abstract class AbstractDataI18nInternalInterceptor extends AbstractDataI18nInterceptor {
-
-	protected static Logger LOG = LoggerFactory.getLogger(AbstractDataI18nInternalInterceptor.class);
 
 	@Override
 	public Object doResultSetIntercept(Invocation invocation,ResultSetHandler resultSetHandler,MetaResultSetHandler metaResultSetHandler) throws Throwable{
 		// 获取处理结果
 		Object result = invocation.proceed();
 		//检查是否需要进行拦截处理
-		if(result != null && isRequireIntercept(invocation, resultSetHandler, metaResultSetHandler)){
+		if(Objects.nonNull(result) && isRequireIntercept(invocation, resultSetHandler, metaResultSetHandler)){
 
 			// 获取当前上下文中的Locale对象
 			Locale locale = this.getLocale();
@@ -58,7 +59,7 @@ public abstract class AbstractDataI18nInternalInterceptor extends AbstractDataI1
 			//connection = configuration.getEnvironment().getDataSource().getConnection();
 			// 获取当前MappedStatement对应的国际化MappedStatement对象
 			String newID = mappedStatement.getId() + "_" + locale.toString();
-			LOG.debug(" Get i18n data query statement by id [" +  newID + "]" );
+			log.debug(" Get i18n data query statement by id [" +  newID + "]" );
 			// 获取与当前查询ID相同的Statement对象
 			MappedStatement i18nMS = configuration.getMappedStatement(newID);
 			//如果未定义当前查询方法对应的国际化查询配置

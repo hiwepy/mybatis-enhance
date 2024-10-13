@@ -15,6 +15,7 @@
  */
 package org.apache.mybatis.enhance.i18n.interceptor;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.exceptions.ExceptionFactory;
 import org.apache.ibatis.executor.ErrorContext;
 import org.apache.ibatis.executor.Executor;
@@ -34,9 +35,8 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Locale;
 
+@Slf4j
 public abstract class AbstractDataI18nExternalInterceptor extends AbstractDataI18nInterceptor {
-
-	protected static Logger LOG = LoggerFactory.getLogger(AbstractDataI18nExternalInterceptor.class);
 
 	public abstract SqlSession getSqlSession();
 
@@ -57,7 +57,7 @@ public abstract class AbstractDataI18nExternalInterceptor extends AbstractDataI1
 			Configuration i18nConfiguration = i18nSession.getConfiguration();
 			// 获取当前MappedStatement对应的国际化MappedStatement对象
 			String newID = mappedStatement.getId() + "_" + locale.toString();
-			LOG.debug(" Get i18n data query statement by id [" +  newID + "]" );
+			log.debug(" Get i18n data query statement by id [" +  newID + "]" );
 			// 获取与当前查询ID相同的Statement对象
 			MappedStatement i18nMS = i18nConfiguration.getMappedStatement(newID);
 			//如果未定义当前查询方法对应的国际化查询配置

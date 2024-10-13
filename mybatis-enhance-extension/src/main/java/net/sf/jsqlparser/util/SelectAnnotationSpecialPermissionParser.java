@@ -34,12 +34,10 @@ import net.sf.jsqlparser.statement.drop.Drop;
 import net.sf.jsqlparser.statement.execute.Execute;
 import net.sf.jsqlparser.statement.insert.Insert;
 import net.sf.jsqlparser.statement.merge.Merge;
-import net.sf.jsqlparser.statement.replace.Replace;
 import net.sf.jsqlparser.statement.select.*;
 import net.sf.jsqlparser.statement.truncate.Truncate;
 import net.sf.jsqlparser.statement.update.Update;
 import net.sf.jsqlparser.statement.upsert.Upsert;
-import net.sf.jsqlparser.statement.values.ValuesStatement;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.binding.MetaStatementHandler;
 import org.apache.mybatis.enhance.annotation.RequiresSpecialPermission;
@@ -51,7 +49,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public class SelectAnnotationSpecialPermissionParser extends StatementVisitorAdapter
-		implements SelectVisitor, FromItemVisitor, ExpressionVisitor, ItemsListVisitor, SelectItemVisitor {
+		implements SelectVisitor, FromItemVisitor, ExpressionVisitor, SelectItemVisitor {
 
 	private static final String NOT_SUPPORTED_YET = "Not supported yet.";
 	private Map<String, String> parsedTables = new HashMap<>();
