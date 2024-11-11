@@ -369,6 +369,7 @@
 		<commons-lang3.version>3.9</commons-lang3.version>
 		<contiperf.version>2.3.4</contiperf.version>
 		<fastjson2.version>2.0.52</fastjson2.version>
+		<hutool.version>5.8.32</hutool.version>
 		<java.version>1.8</java.version>
 		<jsqlparser.version>4.9</jsqlparser.version>
 		<junit.version>4.12</junit.version>
@@ -409,6 +410,12 @@
 			    <groupId>org.projectlombok</groupId>
 			    <artifactId>lombok</artifactId>
 			    <version>${lombok.version}</version>
+			</dependency>
+			<!-- https://mvnrepository.com/artifact/cn.hutool/hutool-all -->
+			<dependency>
+				<groupId>cn.hutool</groupId>
+				<artifactId>hutool-all</artifactId>
+				<version>${hutool.version}</version>
 			</dependency>
 			<!-- https://mvnrepository.com/artifact/com.github.jsqlparser/jsqlparser -->
 			<dependency>
