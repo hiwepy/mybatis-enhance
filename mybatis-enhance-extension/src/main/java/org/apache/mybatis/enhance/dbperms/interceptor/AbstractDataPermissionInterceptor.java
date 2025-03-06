@@ -15,6 +15,8 @@
  */
 package org.apache.mybatis.enhance.dbperms.interceptor;
 
+import lombok.extern.slf4j.Slf4j;
+import org.apache.ibatis.binding.MetaStatementHandler;
 import org.apache.ibatis.cache.CacheKey;
 import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.mapping.MappedStatement;
@@ -22,22 +24,19 @@ import org.apache.ibatis.mapping.SqlCommandType;
 import org.apache.ibatis.plugin.AbstractInterceptorAdapter;
 import org.apache.ibatis.plugin.Invocation;
 import org.apache.ibatis.plugin.Plugin;
-import org.apache.ibatis.binding.MetaStatementHandler;
 import org.apache.mybatis.enhance.annotation.NotRequiresPermission;
 import org.apache.mybatis.enhance.annotation.RequiresPermission;
 import org.apache.mybatis.enhance.annotation.RequiresPermissions;
 import org.apache.mybatis.enhance.annotation.RequiresSpecialPermission;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.DigestUtils;
 
 import java.lang.reflect.Method;
+import java.util.Objects;
 import java.util.Properties;
 
+@Slf4j
 public abstract class AbstractDataPermissionInterceptor extends AbstractInterceptorAdapter {
-
-	protected static Logger LOG = LoggerFactory.getLogger(AbstractDataPermissionInterceptor.class);
 
 	@Override
 	protected boolean isRequireIntercept(Invocation invocation, StatementHandler statementHandler, MetaStatementHandler metaStatementHandler) {
@@ -51,19 +50,18 @@ public abstract class AbstractDataPermissionInterceptor extends AbstractIntercep
 		// 获取接口类型
 		Class<?> mapperInterface = metaStatementHandler.getMapperInterface();
 		// 无需数据权限控制
-		if( null != mapperInterface && AnnotationUtils.findAnnotation(mapperInterface, NotRequiresPermission.class) != null) {
+		if(Objects.nonNull(mapperInterface) && AnnotationUtils.findAnnotation(mapperInterface, NotRequiresPermission.class) != null) {
 			return false;
 		}
-		if( null != method &&  AnnotationUtils.findAnnotation(method, NotRequiresPermission.class) != null) {
+		if( Objects.nonNull(method) &&  AnnotationUtils.findAnnotation(method, NotRequiresPermission.class) != null) {
 			return false;
 		}
 		// 需要数据权限控制
 		if (SqlCommandType.SELECT.equals(mappedStatement.getSqlCommandType())) {
-			if (null != mapperInterface
-					&& AnnotationUtils.findAnnotation(mapperInterface, RequiresPermissions.class) != null) {
+			if (Objects.nonNull(mapperInterface) && AnnotationUtils.findAnnotation(mapperInterface, RequiresPermissions.class) != null) {
 				return true;
 			}
-			if (null != method && (AnnotationUtils.findAnnotation(method, RequiresPermissions.class) != null
+			if (Objects.nonNull(method) && (AnnotationUtils.findAnnotation(method, RequiresPermissions.class) != null
 					|| AnnotationUtils.findAnnotation(method, RequiresPermission.class) != null
 					|| AnnotationUtils.findAnnotation(method, RequiresSpecialPermission.class) != null)) {
 				return true;

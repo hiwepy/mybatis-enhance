@@ -15,6 +15,7 @@
  */
 package org.apache.mybatis.enhance.i18n.interceptor;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.mapping.BoundSql;
@@ -34,9 +35,8 @@ import org.springframework.core.annotation.AnnotationUtils;
 import java.lang.reflect.Method;
 import java.util.Locale;
 
+@Slf4j
 public abstract class AbstractDataI18nColumnInterceptor extends AbstractDataI18nInterceptor {
-
-	protected static Logger LOG = LoggerFactory.getLogger(AbstractDataI18nColumnInterceptor.class);
 
 	@Override
 	public Object doStatementIntercept(Invocation invocation,StatementHandler statementHandler,MetaStatementHandler metaStatementHandler) throws Throwable {
@@ -81,8 +81,8 @@ public abstract class AbstractDataI18nColumnInterceptor extends AbstractDataI18n
 				}
 				// 将处理后的物理分页sql重新写入作为执行SQL
 				metaBoundSql.setValue("sql", originalSQL);
-				if (LOG.isDebugEnabled()) {
-					LOG.debug(" I18n SQL : "+ statementHandler.getBoundSql().getSql());
+				if (log.isDebugEnabled()) {
+					log.debug(" I18n SQL : "+ statementHandler.getBoundSql().getSql());
 				}
 			}
 		}

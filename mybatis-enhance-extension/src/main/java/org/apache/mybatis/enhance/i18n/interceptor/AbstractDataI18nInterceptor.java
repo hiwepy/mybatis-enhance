@@ -15,6 +15,7 @@
  */
 package org.apache.mybatis.enhance.i18n.interceptor;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.cache.CacheKey;
 import org.apache.ibatis.executor.resultset.ResultSetHandler;
@@ -43,9 +44,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 
+@Slf4j
 public abstract class AbstractDataI18nInterceptor extends AbstractInterceptorAdapter {
 
-	protected static Logger LOG = LoggerFactory.getLogger(AbstractDataI18nInterceptor.class);
 	protected DataI18nHandler i18nHandler;
 
 	@Override
@@ -109,9 +110,9 @@ public abstract class AbstractDataI18nInterceptor extends AbstractInterceptorAda
 				Class<?> clazz = Class.forName(i18nHandlerClazz);
 				this.i18nHandler = BeanUtils.instantiateClass(clazz, DataI18nHandler.class);
 			} catch (ClassNotFoundException e) {
-				LOG.warn("Class :" + i18nHandlerClazz + " is not found !");
+				log.warn("Class :" + i18nHandlerClazz + " is not found !");
 			} catch (Exception e) {
-				LOG.warn(e.getMessage());
+				log.warn(e.getMessage());
 			}
 		}
 	}

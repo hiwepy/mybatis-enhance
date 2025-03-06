@@ -15,6 +15,7 @@
  */
 package org.apache.ibatis.plugin;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.executor.parameter.ParameterHandler;
 import org.apache.ibatis.executor.resultset.ResultSetHandler;
@@ -28,6 +29,7 @@ import org.apache.ibatis.binding.MetaStatementHandler;
  * Mybatis拦截器插件适配器: 执行顺序是: doExecutorIntercept，doParameterIntercept，doStatementIntercept，doResultSetIntercept
  * @author 		： <a href="https://github.com/hiwepy">hiwepy</a>
  */
+@Slf4j
 public abstract class AbstractInterceptorAdapter extends AbstractInterceptor {
 
 	protected boolean isRequireIntercept(Invocation invocation,Executor executorProxy, MetaExecutor metaExecutor) {

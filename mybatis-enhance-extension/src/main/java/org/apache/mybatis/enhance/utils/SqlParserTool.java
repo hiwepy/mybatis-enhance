@@ -29,7 +29,6 @@ import net.sf.jsqlparser.statement.drop.Drop;
 import net.sf.jsqlparser.statement.execute.Execute;
 import net.sf.jsqlparser.statement.insert.Insert;
 import net.sf.jsqlparser.statement.merge.Merge;
-import net.sf.jsqlparser.statement.replace.Replace;
 import net.sf.jsqlparser.statement.select.*;
 import net.sf.jsqlparser.statement.truncate.Truncate;
 import net.sf.jsqlparser.statement.update.Update;
@@ -39,6 +38,7 @@ import net.sf.jsqlparser.util.TablesNamesFinder;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * jsqlparser解析SQL工具类
@@ -47,6 +47,7 @@ import java.util.List;
  */
 public class SqlParserTool {
 
+    static TablesNamesFinder tablesNamesFinder = new TablesNamesFinder();
     /**
      * 由于jsqlparser没有获取SQL类型的原始工具，并且在下面操作时需要知道SQL类型，所以编写此工具方法
      * @param sql sql语句
@@ -110,9 +111,18 @@ public class SqlParserTool {
      * @param statement
      * @return
      */
-    public static List<String> getTableList(Select statement){
+    public static Set<String> getTables(Statement statement) throws JSQLParserException {
         TablesNamesFinder tablesNamesFinder = new TablesNamesFinder();
-        List<String> tableList = tablesNamesFinder.getTableList(statement);
+        return tablesNamesFinder.getTables(statement);
+    }
+
+    /**
+     * 获取tables的表名
+     * @param sql
+     * @return
+     */
+    public static Set<String> getTables(String sql) throws JSQLParserException {
+        Set<String> tableList = TablesNamesFinder.findTables(sql);
         return tableList;
     }
 
@@ -121,7 +131,7 @@ public class SqlParserTool {
      * @param selectBody
      * @return
      */
-    public static List<Join> getJoins(SelectBody selectBody){
+    public static List<Join> getJoins(Select selectBody){
         if(selectBody instanceof PlainSelect){
             List<Join> joins =((PlainSelect) selectBody).getJoins();
             return joins;
@@ -134,7 +144,7 @@ public class SqlParserTool {
      * @param selectBody
      * @return
      */
-    public static List<Table> getIntoTables(SelectBody selectBody){
+    public static List<Table> getIntoTables(Select selectBody){
         if(selectBody instanceof PlainSelect){
             List<Table> tables = ((PlainSelect) selectBody).getIntoTables();
             return tables;
@@ -147,7 +157,7 @@ public class SqlParserTool {
      * @param selectBody
      * @return
      */
-    public static void setIntoTables(SelectBody selectBody,List<Table> tables){
+    public static void setIntoTables(Select selectBody,List<Table> tables){
         if(selectBody instanceof PlainSelect){
             ((PlainSelect) selectBody).setIntoTables(tables);
         }
@@ -158,7 +168,7 @@ public class SqlParserTool {
      * @param selectBody
      * @return
      */
-    public static Limit getLimit(SelectBody selectBody){
+    public static Limit getLimit(Select selectBody){
         if(selectBody instanceof PlainSelect){
             Limit limit = ((PlainSelect) selectBody).getLimit();
             return limit;
@@ -171,7 +181,7 @@ public class SqlParserTool {
      * @param selectBody
      * @param l
      */
-    public static void setLimit(SelectBody selectBody,long l){
+    public static void setLimit(Select selectBody,long l){
         if(selectBody instanceof PlainSelect){
             Limit limit = new Limit();
             limit.setRowCount(new LongValue(String.valueOf(l)));
@@ -184,7 +194,7 @@ public class SqlParserTool {
      * @param selectBody
      * @return
      */
-    public static FromItem getFromItem(SelectBody selectBody){
+    public static FromItem getFromItem(Select selectBody){
         if(selectBody instanceof PlainSelect){
             FromItem fromItem = ((PlainSelect) selectBody).getFromItem();
             return fromItem;
@@ -199,11 +209,11 @@ public class SqlParserTool {
      * @param selectBody
      * @return
      */
-    public static SubSelect getSubSelect(SelectBody selectBody){
+    public static Select getSubSelect(Select selectBody){
         if(selectBody instanceof PlainSelect){
             FromItem fromItem = ((PlainSelect) selectBody).getFromItem();
-            if(fromItem instanceof SubSelect){
-                return ((SubSelect) fromItem);
+            if(fromItem instanceof Select){
+                return ((Select) fromItem);
             }
         }else if(selectBody instanceof WithItem){
             SqlParserTool.getSubSelect(((WithItem) selectBody).getSelectBody());
@@ -216,14 +226,14 @@ public class SqlParserTool {
      * @param selectBody
      * @return
      */
-    public static boolean isMultiSubSelect(SelectBody selectBody){
+    public static boolean isMultiSubSelect(Select selectBody){
         if(selectBody instanceof PlainSelect){
             FromItem fromItem = ((PlainSelect) selectBody).getFromItem();
-            if(fromItem instanceof SubSelect){
-                SelectBody subBody = ((SubSelect) fromItem).getSelectBody();
+            if(fromItem instanceof Select){
+                Select subBody = ((Select) fromItem).getSelectBody();
                 if(subBody instanceof PlainSelect){
                     FromItem subFromItem = ((PlainSelect) subBody).getFromItem();
-                    if(subFromItem instanceof SubSelect){
+                    if(subFromItem instanceof Select){
                         return true;
                     }
                 }
@@ -237,9 +247,9 @@ public class SqlParserTool {
      * @param selectBody
      * @return
      */
-    public static List<SelectItem> getSelectItems(SelectBody selectBody){
+    public static List<SelectItem<?>> getSelectItems(Select selectBody){
         if(selectBody instanceof PlainSelect){
-            List<SelectItem> selectItems = ((PlainSelect) selectBody).getSelectItems();
+            List<SelectItem<?>> selectItems = ((PlainSelect) selectBody).getSelectItems();
             return selectItems;
         }
         return null;
@@ -250,7 +260,7 @@ public class SqlParserTool {
         SqlType sqlType = SqlParserTool.getSqlType(sql);
         if(sqlType.equals(SqlType.SELECT)){
             Select statement = (Select) SqlParserTool.getStatement(sql);
-            SubSelect subSelect = SqlParserTool.getSubSelect(statement.getSelectBody());
+            Select subSelect = SqlParserTool.getSubSelect(statement.getSelectBody());
             System.out.println(subSelect.getSelectBody());
         }
     }

@@ -19,6 +19,7 @@ import net.sf.jsqlparser.expression.*;
 import net.sf.jsqlparser.expression.operators.arithmetic.*;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
+import net.sf.jsqlparser.expression.operators.conditional.XorExpression;
 import net.sf.jsqlparser.expression.operators.relational.*;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
@@ -34,17 +35,15 @@ import net.sf.jsqlparser.statement.drop.Drop;
 import net.sf.jsqlparser.statement.execute.Execute;
 import net.sf.jsqlparser.statement.insert.Insert;
 import net.sf.jsqlparser.statement.merge.Merge;
-import net.sf.jsqlparser.statement.replace.Replace;
 import net.sf.jsqlparser.statement.select.*;
 import net.sf.jsqlparser.statement.truncate.Truncate;
 import net.sf.jsqlparser.statement.update.Update;
 import net.sf.jsqlparser.statement.upsert.Upsert;
-import net.sf.jsqlparser.statement.values.ValuesStatement;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class QueryTablesNamesFinder implements SelectVisitor, FromItemVisitor, ExpressionVisitor, ItemsListVisitor, SelectItemVisitor, StatementVisitor {
+public class QueryTablesNamesFinder extends StatementVisitorAdapter implements SelectVisitor, FromItemVisitor, ExpressionVisitor, SelectItemVisitor, StatementVisitor {
 
     private static final String NOT_SUPPORTED_YET = "Not supported yet.";
     private List<String> tables;
@@ -66,6 +65,31 @@ public class QueryTablesNamesFinder implements SelectVisitor, FromItemVisitor, E
         select.getSelectBody().accept(this);
     }
 
+    @Override
+    public void visit(TranscodingFunction transcodingFunction) {
+
+    }
+
+    @Override
+    public void visit(TrimFunction trimFunction) {
+
+    }
+
+    @Override
+    public void visit(RangeExpression rangeExpression) {
+
+    }
+
+    @Override
+    public void visit(TSQLLeftJoin tsqlLeftJoin) {
+
+    }
+
+    @Override
+    public void visit(TSQLRightJoin tsqlRightJoin) {
+
+    }
+
     /**
      * Main entry for this Tool class. A list of found tables is returned.
      */
@@ -79,6 +103,16 @@ public class QueryTablesNamesFinder implements SelectVisitor, FromItemVisitor, E
     public void visit(WithItem withItem) {
         otherItemNames.add(withItem.getName().toLowerCase());
         withItem.getSelectBody().accept(this);
+    }
+
+    @Override
+    public void visit(Values aThis) {
+
+    }
+
+    @Override
+    public void visit(ParenthesedSelect parenthesedSelect) {
+
     }
 
     @Override
@@ -142,6 +176,11 @@ public class QueryTablesNamesFinder implements SelectVisitor, FromItemVisitor, E
         between.getLeftExpression().accept(this);
         between.getBetweenExpressionStart().accept(this);
         between.getBetweenExpressionEnd().accept(this);
+    }
+
+    @Override
+    public void visit(OverlapsCondition overlapsCondition) {
+
     }
 
     @Override
@@ -227,6 +266,11 @@ public class QueryTablesNamesFinder implements SelectVisitor, FromItemVisitor, E
     }
 
     @Override
+    public void visit(MemberOfExpression memberOfExpression) {
+
+    }
+
+    @Override
     public void visit(LongValue longValue) {
     }
 
@@ -251,12 +295,32 @@ public class QueryTablesNamesFinder implements SelectVisitor, FromItemVisitor, E
     }
 
     @Override
+    public void visit(DoubleAnd doubleAnd) {
+
+    }
+
+    @Override
+    public void visit(Contains contains) {
+
+    }
+
+    @Override
+    public void visit(ContainedBy containedBy) {
+
+    }
+
+    @Override
     public void visit(NullValue nullValue) {
     }
 
     @Override
     public void visit(OrExpression orExpression) {
         visitBinaryExpression(orExpression);
+    }
+
+    @Override
+    public void visit(XorExpression orExpression) {
+
     }
 
     @Override
@@ -428,6 +492,11 @@ public class QueryTablesNamesFinder implements SelectVisitor, FromItemVisitor, E
     }
 
     @Override
+    public void visit(TableStatement tableStatement) {
+
+    }
+
+    @Override
     public void visit(MultiExpressionList multiExprList) {
         for (ExpressionList exprList : multiExprList.getExprList()) {
             exprList.accept(this);
@@ -497,6 +566,21 @@ public class QueryTablesNamesFinder implements SelectVisitor, FromItemVisitor, E
     }
 
     @Override
+    public void visit(AllValue allValue) {
+
+    }
+
+    @Override
+    public void visit(IsDistinctExpression isDistinctExpression) {
+
+    }
+
+    @Override
+    public void visit(GeometryDistance geometryDistance) {
+
+    }
+
+    @Override
     public void visit(SelectExpressionItem item) {
         item.getExpression().accept(this);
     }
@@ -516,6 +600,11 @@ public class QueryTablesNamesFinder implements SelectVisitor, FromItemVisitor, E
 
     @Override
     public void visit(MySQLGroupConcat groupConcat) {
+    }
+
+    @Override
+    public void visit(RowGetExpression rowGetExpression) {
+
     }
 
     @Override
@@ -675,6 +764,11 @@ public class QueryTablesNamesFinder implements SelectVisitor, FromItemVisitor, E
     }
 
     @Override
+    public void visit(ParenthesedFromItem aThis) {
+
+    }
+
+    @Override
     public void visit(AlterView alterView) {
         throw new UnsupportedOperationException(NOT_SUPPORTED_YET);
     }
@@ -778,4 +872,48 @@ public class QueryTablesNamesFinder implements SelectVisitor, FromItemVisitor, E
         array.getIndexExpression().accept(this);
     }
 
+    @Override
+    public void visit(ArrayConstructor aThis) {
+
+    }
+
+    @Override
+    public void visit(VariableAssignment aThis) {
+
+    }
+
+    @Override
+    public void visit(XMLSerializeExpr aThis) {
+
+    }
+
+    @Override
+    public void visit(TimezoneExpression aThis) {
+
+    }
+
+    @Override
+    public void visit(JsonAggregateFunction aThis) {
+
+    }
+
+    @Override
+    public void visit(JsonFunction aThis) {
+
+    }
+
+    @Override
+    public void visit(ConnectByRootOperator aThis) {
+
+    }
+
+    @Override
+    public void visit(OracleNamedFunctionParameter aThis) {
+
+    }
+
+    @Override
+    public void visit(SelectItem selectItem) {
+
+    }
 }
