@@ -394,9 +394,9 @@
 		<slf4j.version>1.7.36</slf4j.version>
 		<lombok.version>1.18.10</lombok.version>
 		<spring.version>5.3.39</spring.version>
-        <mybatis.version>3.5.19</mybatis.version>
+        <mybatis.version>3.5.17</mybatis.version>
         <mybatis-spring.version>2.1.2</mybatis-spring.version>
-        <mybatis-plus.version>3.5.10.1</mybatis-plus.version>
+        <mybatis-plus.version>3.5.9</mybatis-plus.version>
 	</properties>
 
 	<dependencyManagement>

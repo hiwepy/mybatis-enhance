@@ -101,7 +101,7 @@ public class QueryTablesNamesFinder extends StatementVisitorAdapter implements S
 
     @Override
     public void visit(WithItem withItem) {
-        otherItemNames.add(withItem.getName().toLowerCase());
+        otherItemNames.add(withItem.get().toLowerCase());
         withItem.getSelectBody().accept(this);
     }
 
