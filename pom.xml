@@ -32,13 +32,13 @@
             <timezone>+8</timezone>
         </developer>
     </developers>
-    <modules>
-        <module>mybatis-enhance-annotation</module>
-        <module>mybatis-enhance-core</module>
-        <module>mybatis-enhance-extension</module>
-        <module>mybatis-enhance-typehandler</module>
-        <module>mybatis-enhance-spring</module>
-    </modules>
+    <subprojects>
+        <subproject>mybatis-enhance-annotation</subproject>
+        <subproject>mybatis-enhance-core</subproject>
+        <subproject>mybatis-enhance-extension</subproject>
+        <subproject>mybatis-enhance-typehandler</subproject>
+        <subproject>mybatis-enhance-spring</subproject>
+    </subprojects>
     <properties>
         
         <java.version>21</java.version>
@@ -497,7 +497,6 @@
             </activation>
             <properties>
                 
-                <additionalparam>-Xdoclint:none</additionalparam>
                 <commons-beanutils.version>1.11.0</commons-beanutils.version>
                 <commons-lang3.version>3.20.0</commons-lang3.version>
                 <commons-lang.version>2.6</commons-lang.version>
